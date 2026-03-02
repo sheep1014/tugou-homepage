@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>帝国时代4模拟器 - 纯净版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap');
+        
+        ::-webkit-scrollbar { width: 2px; height: 2px; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
+        body { 
+            background-color: #020617; 
+            color: #f1f5f9; 
+            font-family: 'Noto Serif SC', serif;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
+            user-select: none;
+        }
+
+        .game-card { transition: all 0.2s ease; position: relative; overflow: hidden; cursor: pointer; }
+        .game-card:active { transform: scale(0.96); }
+        .smooth-progress { transition: width 1.05s linear; }
+
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        @keyframes breathe { 0%, 100% { border-color: rgba(251, 191, 36, 0.3); } 50% { border-color: rgba(251, 191, 36, 0.8); } }
+        .breathe-gold { animation: breathe 2s infinite ease-in-out; }
+
+        .ultimate-victory { background: radial-gradient(circle at center, rgba(250, 204, 21, 0.15) 0%, transparent 70%); animation: pulse-glow 3s infinite alternate; }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 20px rgba(250,204,21,0.2) inset; } 100% { box-shadow: 0 0 60px rgba(250,204,21,0.5) inset; } }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #818cf8; margin-top: -4px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #334155; border-radius: 2px; }
+        
+        .truncate-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body class="h-[100dvh] w-full overflow-hidden">
+    <div id="root" class="h-full w-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ==========================================
+        // 全局静态配置与工具函数 (绝对安全区)
+        // ==========================================
+        const CIV_DATA = {
+            english: { id: 'english', name: '英格兰', color: '#f43f5e', bonus: { food: 1.15, wood: 1.0, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'archer', name: '长弓兵', power: 1.5 }, icon: '🏹', desc: '防御之王。农田产出+15%，帝王时代农田自动产金。', theme: 'text-rose-400' },
+            french: { id: 'french', name: '法兰西', color: '#3b82f6', bonus: { food: 1.0, wood: 1.15, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'cavalry', name: '皇家骑士', power: 1.5 }, icon: '🐎', desc: '铁骑冲锋。木材+15%，时代II即可统领重骑兵。', theme: 'text-blue-400' },
+            hre: { id: 'hre', name: '神圣罗马', color: '#eab308', bonus: { food: 1.05, wood: 1.05, gold: 1.05, stone: 1.05, cost: 1.0 }, unique: { type: 'infantry', name: '国土佣仆', power: 1.5 }, icon: '⚔️', desc: '信仰之盾。所有资源采集+5%，步兵具有范围伤害。', theme: 'text-yellow-500' },
+            abbasid: { id: 'abbasid', name: '黑衣大食', color: '#10b981', bonus: { food: 1.0, wood: 1.0, gold: 1.0, stone: 1.0, cost: 0.8 }, unique: { type: 'archer', name: '骆驼射手', power: 1.5 }, icon: '🐫', desc: '智慧宫。建筑与科技成本永久降低20%。', theme: 'text-emerald-400' },
+            chinese: { id: 'chinese', name: '中国', color: '#ef4444', bonus: { food: 1.0, wood: 1.0, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'archer', name: '诸葛弩', power: 1.5 }, icon: '🏮', desc: '宋朝盛世。村民造价与生产耗时均减半，基建狂魔。', theme: 'text-red-500' },
+            mongols: { id: 'mongols', name: '蒙古', color: '#22d3ee', bonus: { food: 1.0, wood: 1.0, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'archer', name: '蒙古突骑', power: 1.5 }, icon: '🏹', desc: '草原铁骑。远征大捷时掠夺的资源量额外提升 50%。', theme: 'text-cyan-400' },
+            rus: { id: 'rus', name: '罗斯', color: '#ea580c', bonus: { food: 1.10, wood: 1.20, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'infantry', name: '射击军', power: 1.5 }, icon: '🪓', desc: '林中之虎。木材+20%，狩猎加成极大提升食物。', theme: 'text-orange-600' },
+            delhi: { id: 'delhi', name: '德里苏丹', color: '#22c55e', bonus: { food: 1.0, wood: 1.0, gold: 1.0, stone: 1.0, cost: 1.0 }, unique: { type: 'cavalry', name: '战象', power: 1.5 }, icon: '🐘', desc: '学术研究。所有科技研发成本降低 50%。', theme: 'text-green-500' }
+        };
+
+        const DIFF_CONFIG = {
+            peaceful: { label: '和平', mult: 0.3, baseTimer: 180, target: 3, color: 'text-emerald-400' },
+            easy: { label: '简单', mult: 0.7, baseTimer: 150, target: 4, color: 'text-green-400' },
+            normal: { label: '普通', mult: 1.0, baseTimer: 120, target: 5, color: 'text-sky-400' },
+            hard: { label: '困难', mult: 1.5, baseTimer: 90, target: 7, color: 'text-orange-400' },
+            expert: { label: '极难', mult: 2.5, baseTimer: 70, target: 9, color: 'text-red-500' },
+            abyss: { label: '深渊', mult: 4.0, baseTimer: 50, target: 12, color: 'text-purple-500' }
+        };
+
+        const formatGameTime = (sec) => {
+            const m = Math.floor(sec / 60).toString(); const s = (sec % 60).toString();
+            return (m.length < 2 ? '0' + m : m) + ':' + (s.length < 2 ? '0' + s : s);
+        };
+
+        const formatCost = (c) => {
+            if (!c) return '';
+            const p = []; const keys = Object.keys(c);
+            for (let i=0; i<keys.length; i++) {
+                const k = keys[i];
+                if (c[k] > 0) p.push(c[k] + (k==='food'?'肉':k==='wood'?'木':k==='gold'?'金':'石'));
+            }
+            return p.join(' ');
+        };
+
+        const getQueueBgColor = (type) => {
+            if (['worker', 'house', 'mill', 'barracks'].includes(type)) return 'bg-cyan-500/40';
+            if (['unit'].includes(type)) return 'bg-rose-500/40';
+            if (['tech', 'age'].includes(type)) return 'bg-purple-500/40';
+            if (['expedition', 'hunt'].includes(type)) return 'bg-amber-500/40';
+            if (['wonder'].includes(type)) return 'bg-yellow-400/50';
+            return 'bg-slate-500/40';
+        };
+
+        const getIcon = (n) => {
+            const c = "w-3 h-3 md:w-4 md:h-4 drop-shadow-md shrink-0 ";
+            if(n==='food') return <svg className={c+"text-rose-400"} viewBox="0 0 24 24" fill="currentColor"><path d="M18.5 4.5a3.5 3.5 0 0 0-4.95 0l-9.1 9.1a3.5 3.5 0 0 0 4.95 4.95l9.1-9.1a3.5 3.5 0 0 0 0-4.95Zm-2.83 2.83-7.07 7.07a1.5 1.5 0 0 1-2.12-2.12l7.07-7.07a1.5 1.5 0 0 1 2.12 2.12Z" /><path d="M4.5 19.5l-2.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><path d="M6.5 21.5l2.5-2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>;
+            if(n==='wood') return <svg className={c+"text-amber-600"} viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h12a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Zm0 8h12a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-2a3 3 0 0 1 3-3Z" /><circle cx="18" cy="9" r="1" fill="#78350f"/><circle cx="18" cy="17" r="1" fill="#78350f"/></svg>;
+            if(n==='gold') return <svg className={c+"text-yellow-400"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="6" rx="6" ry="3" fill="#fbbf24" stroke="#d97706"/><path d="M6 6v4c0 1.66 2.69 3 6 3s6-1.34 6-3V6" fill="#fbb615" stroke="#d97706"/><path d="M6 10v4c0 1.66 2.69 3 6 3s6-1.34 6-3v-4" fill="#f59e0b" stroke="#b45309"/><path d="M6 14v4c0 1.66 2.69 3 6 3s6-1.34 6-3v-4" fill="#d97706" stroke="#92400e"/></svg>;
+            if(n==='stone') return <svg className={c+"text-slate-300"} viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="14" width="8" height="6" rx="1" stroke="#475569" strokeWidth="1"/><rect x="13" y="14" width="8" height="6" rx="1" stroke="#475569" strokeWidth="1"/><rect x="8" y="6" width="8" height="6" rx="1" stroke="#475569" strokeWidth="1"/></svg>;
+            return null;
+        };
+
+        // ==========================================
+        // 主应用组件
+        // ==========================================
+        class ErrorBoundary extends React.Component {
+            constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            componentDidCatch(error, info) { console.error('React Error:', error, info); }
+            render() { if (this.state.hasError) return <div className="text-red-500 p-4">出错啦: {this.state.error?.message}</div>; return this.props.children; }
+        }
+
+        const App = () => {
+            const [screen, setScreen] = useState('menu'); 
+            const [playerCiv, setPlayerCiv] = useState(null);
+            const [rivalCiv, setRivalCiv] = useState(null);
+            const [difficulty, setDifficulty] = useState('normal');
+            const [paused, setPaused] = useState(false);
+            const [gameTime, setGameTime] = useState(0);
+
+            const [resources, setResources] = useState({ food: 200, wood: 200, gold: 100, stone: 0 });
+            const [workers, setWorkers] = useState({ total: 6, idle: 0, food: 6, wood: 0, gold: 0, stone: 0 });
+            const [military, setMilitary] = useState({ infantry: 0, archer: 0, cavalry: 0, monks: 0 });
+            const [buildings, setBuildings] = useState({ mills: 0, houses: 0, barracks: 0 });
+            const [age, setAge] = useState(1);
+            const [population, setPopulation] = useState({ current: 6, max: 10 });
+            const [techs, setTechs] = useState({ ecoFood: 0, ecoWood: 0, ecoMine: 0, military: 0 });
+            const [relics, setRelics] = useState(0);
+            
+            const [tasks, setTasks] = useState([]);
+            const [enemy, setEnemy] = useState({ wave: 1, timer: 150, army: { infantry: 0, archer: 0, cavalry: 0 } });
+            const [enemyBase, setEnemyBase] = useState({ level: 1, defensePower: 30 });
+            const [wonderDefense, setWonderDefense] = useState({ active: false, timer: 300 });
+            
+            const [battleReport, setBattleReport] = useState(null);
+            const [logs, setLogs] = useState([]);
+            const [stats, setStats] = useState({ res: 0, kills: 0, lost: 0, vils: 0, expeditions: 0 });
+            const [attackRatio, setAttackRatio] = useState(0.5);
+            const [endReason, setEndReason] = useState(null); 
+
+            const stateRef = useRef({ playerCiv, rivalCiv, techs, military, workers, enemyBase, difficulty, age });
+            const logRef = useRef(null);
+
+            useEffect(() => { 
+                stateRef.current = { playerCiv, rivalCiv, techs, military, workers, enemyBase, difficulty, age }; 
+            }, [playerCiv, rivalCiv, techs, military, workers, enemyBase, difficulty, age]);
+            
+            useEffect(() => { 
+                if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; 
+            }, [logs]);
+
+            const addLog = (msg) => {
+                const timeStr = formatGameTime(gameTime);
+                setLogs(prev => {
+                    const next = [...prev, { time: timeStr, text: msg }];
+                    if (next.length > 49) return next.slice(next.length - 49);
+                    return next;
+                });
+            };
+
+            const initGame = (civId) => {
+                const civ = CIV_DATA[civId];
+                setPlayerCiv(civ);
+                const otherCivs = Object.keys(CIV_DATA).filter(k => k !== civId);
+                const rCiv = CIV_DATA[otherCivs[Math.floor(Math.random() * otherCivs.length)]];
+                setRivalCiv(rCiv);
+                setEnemy({ wave: 1, timer: DIFF_CONFIG[difficulty].baseTimer, army: { infantry: 0, archer: 0, cavalry: 0 } });
+                setScreen('playing');
+                addLog(`统帅，选择了 ${civ.name}。`);
+            };
+
+            const resetGame = () => {
+                setPlayerCiv(null); setRivalCiv(null); setGameTime(0);
+                setResources({ food: 200, wood: 200, gold: 100, stone: 0 });
+                setWorkers({ total: 6, idle: 0, food: 6, wood: 0, gold: 0, stone: 0 });
+                setMilitary({ infantry: 0, archer: 0, cavalry: 0, monks: 0 });
+                setBuildings({ mills: 0, houses: 0, barracks: 0 });
+                setAge(1); setPopulation({ current: 6, max: 10 });
+                setTechs({ ecoFood: 0, ecoWood: 0, ecoMine: 0, military: 0 });
+                setRelics(0); setLogs([]); setTasks([]);
+                setEnemyBase({ level: 1, defensePower: 30 });
+                setBattleReport(null); setWonderDefense({ active: false, timer: 300 });
+                setStats({ res: 0, kills: 0, lost: 0, vils: 0, expeditions: 0 });
+                setEndReason(null); setAttackRatio(0.5); setPaused(false);
+                setScreen('menu');
+            };
+
+            // === 核心：绝对无闭包隐患的定时器 ===
+            useEffect(() => {
+                if (screen !== 'playing' || paused) return;
+                
+                const tick = setInterval(() => {
+                    setGameTime(prev => prev + 1);
+
+                    // 资源结算
+                    const s = stateRef.current;
+                    if (s.playerCiv) {
+                        const rates = {
+                            f: s.workers.food * 1.0 * s.playerCiv.bonus.food * (1 + buildings.mills * 0.05) * (1 + s.techs.ecoFood * 0.15),
+                            w: s.workers.wood * 1.0 * s.playerCiv.bonus.wood * (1 + s.techs.ecoWood * 0.15),
+                            g: (s.workers.gold * 1.0 * s.playerCiv.bonus.gold + (s.playerCiv.id==='english'&&s.age>=4 ? s.workers.food*0.2 : 0)) * (1 + s.techs.ecoMine * 0.15) + relics * 5.0,
+                            s: s.workers.stone * 1.0 * s.playerCiv.bonus.stone * (1 + s.techs.ecoMine * 0.15)
+                        };
+                        setResources(r => ({ food: r.food + rates.f, wood: r.wood + rates.w, gold: r.gold + rates.g, stone: r.stone + rates.s }));
+                        setStats(st => ({ ...st, res: st.res + rates.f + rates.w + rates.g + rates.s }));
+                    }
+
+                    // 奇观防御
+                    setWonderDefense(prev => {
+                        if (prev.active && prev.timer <= 1) { setEndReason('wonder'); setScreen('game_over'); return { active: false, timer: 0 }; }
+                        if (prev.active) return { ...prev, timer: prev.timer - 1 };
+                        return prev;
+                    });
+
+                    // 敌人来袭
+                    setEnemy(e => {
+                        if (e.timer <= 1) {
+                            // 触发战斗委托到外部，这里只重置时间
+                            const dCfg = DIFF_CONFIG[s.difficulty];
+                            const baseT = dCfg ? dCfg.baseTimer : 120;
+                            const nTime = wonderDefense.active ? Math.max(10, Math.floor(baseT/3)) : baseT + e.wave * 5;
+                            return { wave: e.wave + 1, timer: nTime, army: e.army }; 
+                        }
+                        return { ...e, timer: e.timer - 1 };
+                    });
+
+                    // 队列流转
+                    setTasks(prevTasks => {
+                        if (prevTasks.length === 0) return prevTasks;
+                        const qs = {};
+                        return prevTasks.map(t => {
+                            if (t.timeLeft <= 0) return t; 
+                            let qId = t.type;
+                            if (t.type === 'unit') qId = `u_${t.payload}`;
+                            else if (t.type === 'tech') qId = `t_${t.payload.key}`;
+                            else if (t.type === 'expedition') qId = `e_${t.id}`;
+                            if (!qs[qId]) { qs[qId] = true; return { ...t, timeLeft: t.timeLeft - 1 }; }
+                            return t;
+                        });
+                    });
+
+                }, 1000);
+                return () => clearInterval(tick);
+            }, [screen, paused, buildings.mills, relics, wonderDefense.active]);
+
+            // === 战斗结算分离器 (监听倒计时) ===
+            useEffect(() => {
+                if (screen === 'playing' && !paused && enemy.timer === 0) {
+                    const s = stateRef.current;
+                    const waveToCalc = enemy.wave - 1; // 因为上一步wave已+1，结算上一波
+                    
+                    // 生成上波敌人
+                    const m = (DIFF_CONFIG[s.difficulty]?.mult || 1) * (wonderDefense.active ? 2.5 : 1);
+                    const pts = Math.floor(waveToCalc * 4 * m);
+                    let eInf=0, eArc=0, eCav=0;
+                    for(let i=0; i<pts; i++){ const rd=Math.random(); if(rd<0.33)eInf++; else if(rd<0.66)eArc++; else eCav++; }
+                    const eArmy = { infantry: eInf, archer: eArc, cavalry: eCav };
+
+                    // 计算战力
+                    const calcPwr = (a, opp, tech, civ) => {
+                        let i=a.infantry||0; let ar=a.archer||0; let c=a.cavalry||0;
+                        if(civ?.unique){ if(civ.unique.type==='infantry')i*=civ.unique.power; else if(civ.unique.type==='archer')ar*=civ.unique.power; else c*=civ.unique.power; }
+                        let p = i*((opp.cavalry||0)>0?1.5:1.0) + ar*((opp.infantry||0)>0?1.5:1.0) + c*((opp.archer||0)>0?1.5:1.0);
+                        return (p||0.1) * (1 + tech*0.2);
+                    };
+
+                    const eEff = calcPwr(eArmy, s.military, Math.floor(waveToCalc/4), s.rivalCiv);
+                    const mEff = calcPwr(s.military, eArmy, s.techs.military, s.playerCiv);
+                    const winR = mEff / (mEff + eEff + 0.1);
+                    const isWin = Math.random() <= winR;
+                    const eTotal = eInf + eArc + eCav;
+
+                    setPaused(true);
+                    if (isWin) {
+                        const lRate = 0.1 + Math.random() * 0.2;
+                        const lInf = Math.floor(s.military.infantry * lRate);
+                        const lArc = Math.floor(s.military.archer * lRate);
+                        const lCav = Math.floor(s.military.cavalry * lRate);
+                        const tLoss = lInf + lArc + lCav;
+
+                        setMilitary(prev => ({ ...prev, infantry: prev.infantry - lInf, archer: prev.archer - lArc, cavalry: prev.cavalry - lCav }));
+                        setPopulation(p => ({ ...p, current: Math.max(0, p.current - tLoss) }));
+                        setStats(st => ({ ...st, kills: st.kills + eTotal, lost: st.lost + tLoss }));
+                        setBattleReport({ win: true, title: "防线大捷", desc: `击溃第 ${waveToCalc} 波敌军！`, myLoss: tLoss, enemyLoss: eTotal });
+                        addLog(`防守成功，折损 ${tLoss} 兵力。`);
+                    } else {
+                        const mLoss = s.military.infantry + s.military.archer + s.military.cavalry + s.military.monks;
+                        setMilitary({ infantry: 0, archer: 0, cavalry: 0, monks: 0 });
+                        
+                        const vKills = Math.floor(eEff * (1 - winR));
+                        const vLoss = Math.min(s.workers.total, vKills);
+                        setWorkers(w => {
+                            let r=vLoss; const n={...w}; n.total-=r;
+                            const ks=['idle','food','wood','gold','stone'];
+                            for(let k of ks){ if(r<=0)break; if(n[k]>=r){n[k]-=r;r=0;}else{r-=n[k];n[k]=0;} }
+                            return n;
+                        });
+                        setPopulation(p => ({ ...p, current: Math.max(0, p.current - mLoss - vLoss) }));
+                        setResources(r => ({ food: Math.max(0, r.food-500), wood: Math.max(0, r.wood-500), gold: Math.max(0, r.gold-500), stone: Math.max(0, r.stone-500) }));
+                        
+                        let wDest = false;
+                        if (wonderDefense.active && Math.random() < 0.3) { setWonderDefense({ active: false, timer: 300 }); wDest = true; }
+                        
+                        setStats(st => ({ ...st, kills: st.kills + Math.floor(eTotal * winR), lost: st.lost + mLoss, vils: st.vils + vLoss }));
+                        
+                        if (s.workers.total - vLoss <= 0) {
+                            setEndReason('defeat'); setScreen('game_over'); addLog("文明覆灭！");
+                        } else {
+                            setBattleReport({ win: false, title: "防线崩溃", desc: `第 ${waveToCalc} 波溃败！${wDest?'奇观被毁！':''}`, myLoss: mLoss, vilsLost: vLoss, resLost: 500 });
+                            addLog(`防守失败，遇害 ${vLoss} 村民。`);
+                        }
+                    }
+                }
+            }, [enemy.timer, screen, paused, wonderDefense.active]);
+
+            // === 任务完成收割机 ===
+            useEffect(() => {
+                if (screen !== 'playing' || paused) return;
+                const done = tasks.filter(t => t.timeLeft <= 0);
+                if (done.length > 0) {
+                    done.forEach(t => {
+                        if (t.type === 'worker') { setWorkers(w => ({ ...w, total: w.total+1, idle: w.idle+1 })); setPopulation(p => ({ ...p, current: p.current+1 })); }
+                        else if (t.type === 'unit') { setMilitary(m => ({ ...m, [t.payload]: m[t.payload]+1 })); setPopulation(p => ({ ...p, current: p.current+1 })); }
+                        else if (t.type === 'house') { setBuildings(b => ({ ...b, houses: b.houses+1 })); setPopulation(p => ({ ...p, max: p.max+10 })); }
+                        else if (t.type === 'mill') { setBuildings(b => ({ ...b, mills: b.mills+1 })); }
+                        else if (t.type === 'barracks') { setBuildings(b => ({ ...b, barracks: b.barracks+1 })); addLog('军校落成，产兵加速！'); }
+                        else if (t.type === 'tech') { setTechs(tc => ({ ...tc, [t.payload.key]: tc[t.payload.key]+1 })); addLog(`科技 ${t.name} 完成！`); }
+                        else if (t.type === 'age') { setAge(t.payload); addLog(`进入时代 ${t.payload}！`); }
+                        else if (t.type === 'hunt') { if(Math.random()<0.6){ setRelics(r=>r+1); addLog("带回圣物！产金增加。"); } else addLog("寻觅圣物失败。"); }
+                        else if (t.type === 'wonder') { setWonderDefense({ active: true, timer: 300 }); addLog("奇观落成！坚守5分钟即可胜利！"); }
+                        else if (t.type === 'expedition') {
+                            const s = stateRef.current;
+                            const pld = t.payload;
+                            
+                            const calcPwr = (a, opp, tech, civ) => {
+                                let i=a.infantry||0; let ar=a.archer||0; let c=a.cavalry||0;
+                                if(civ?.unique){ if(civ.unique.type==='infantry')i*=civ.unique.power; else if(civ.unique.type==='archer')ar*=civ.unique.power; else c*=civ.unique.power; }
+                                let p = i*((opp.cavalry||0)>0?1.5:1.0) + ar*((opp.infantry||0)>0?1.5:1.0) + c*((opp.archer||0)>0?1.5:1.0);
+                                return (p||0.1) * (1 + tech*0.2);
+                            };
+
+                            const mEff = calcPwr({infantry: pld.inf, archer: pld.arc, cavalry: pld.cav}, {infantry: pld.p/3, archer: pld.p/3, cavalry: pld.p/3}, s.techs.military, s.playerCiv);
+                            const isWin = Math.random() <= (mEff / (mEff + pld.p + 0.1));
+                            
+                            setPaused(true);
+                            setStats(st => ({ ...st, expeditions: st.expeditions + 1 }));
+                            
+                            if (isWin) {
+                                const loot = Math.floor(pld.lv * 600 * (s.playerCiv?.id === 'mongols' ? 1.5 : 1.0));
+                                setResources(r => ({ food: r.food+loot, wood: r.wood+loot, gold: r.gold+loot, stone: r.stone+loot }));
+                                
+                                const lInf = Math.floor(pld.inf * 0.3); const lArc = Math.floor(pld.arc * 0.3); const lCav = Math.floor(pld.cav * 0.3);
+                                const tLoss = lInf + lArc + lCav;
+                                
+                                setMilitary(m => ({ ...m, infantry: m.infantry + (pld.inf - lInf), archer: m.archer + (pld.arc - lArc), cavalry: m.cavalry + (pld.cav - lCav) }));
+                                setPopulation(p => ({ ...p, current: Math.max(0, p.current - tLoss) }));
+                                setStats(st => ({ ...st, lost: st.lost + tLoss }));
+                                
+                                if (pld.lv >= (DIFF_CONFIG[s.difficulty]?.target || 5)) {
+                                    setEndReason('conquest'); setScreen('game_over');
+                                } else {
+                                    setEnemyBase(b => ({ level: b.level + 1, defensePower: b.defensePower + 60 }));
+                                    setBattleReport({ win: true, title: "远征大捷", desc: `摧毁 Lv.${pld.lv} 基地！缴获物资。`, myLoss: tLoss, lootAmount: loot });
+                                    addLog(`远征胜利，攻破 Lv.${pld.lv} 基地。`);
+                                }
+                            } else {
+                                const tLoss = pld.inf + pld.arc + pld.cav;
+                                setPopulation(p => ({ ...p, current: Math.max(0, p.current - tLoss) }));
+                                setStats(st => ({ ...st, lost: st.lost + tLoss }));
+                                setBattleReport({ win: false, title: "远征覆没", desc: "大军遭遇伏击，全军覆没。", myLoss: tLoss });
+                                addLog(`远征惨败，无人生还。`);
+                            }
+                        }
+                    });
+                    setTasks(ts => ts.filter(t => t.timeLeft > 0));
+                }
+            }, [tasks, screen, paused]);
+
+            // --- 其他操作函数 ---
+            const enqueue = (type, payload, cost, time, name) => {
+                if(!checkCost(cost)) return;
+                let qp = 0; tasks.forEach(t => { if(t.type==='worker'||t.type==='unit') qp++; });
+                if((type==='worker'||type==='unit') && population.current + qp >= population.max) return;
+                if((type==='age'||type==='tech'||type==='wonder') && tasks.some(t => t.type === type && (t.payload?.key === payload?.key || t.payload === payload))) return;
+                if(type === 'hunt' && military.monks - tasks.filter(t=>t.type==='hunt').length <= 0) return;
+
+                applyCost(cost);
+                let fT = time;
+                if (type === 'worker' && playerCiv?.id === 'chinese') fT = Math.max(1, Math.floor(time/2));
+                if (type === 'unit') fT = Math.max(1, Math.round(time / (1 + buildings.barracks * 0.5)));
+
+                setTasks(ts => [...ts, { id: Date.now() + Math.random(), type, payload, totalTime: fT, timeLeft: fT, name, cost }]);
+            };
+
+            const cancel = (id) => {
+                setTasks(ts => {
+                    const idx = ts.findIndex(t => t.id === id);
+                    if (idx !== -1) {
+                        const t = ts[idx];
+                        setResources(r => { const n = {...r}; for(let k in t.cost) n[k]+=t.cost[k]; return n; });
+                        if (t.type === 'expedition') setMilitary(m => ({...m, infantry: m.infantry+t.payload.inf, archer: m.archer+t.payload.arc, cavalry: m.cavalry+t.payload.cav }));
+                        const copy = [...ts]; copy.splice(idx, 1); return copy;
+                    }
+                    return ts;
+                });
+            };
+
+            const startExpedition = () => {
+                const inf = Math.floor(military.infantry * attackRatio);
+                const arc = Math.floor(military.archer * attackRatio);
+                const cav = Math.floor(military.cavalry * attackRatio);
+                const count = inf + arc + cav;
+                if (count <= 0 || tasks.some(t => t.type === 'expedition')) return;
+                
+                const c = { food: count * 5, wood: 0, gold: 0, stone: 0 };
+                if (!checkCost(c)) { addLog("军粮不足。"); return; }
+                applyCost(c);
+                
+                setMilitary(m => ({ ...m, infantry: m.infantry - inf, archer: m.archer - arc, cavalry: m.cavalry - cav }));
+                const dur = enemyBase.level * 8;
+                setTasks(ts => [...ts, { id: Date.now(), type: 'expedition', payload: { inf, arc, cav, lv: enemyBase.level, p: enemyBase.defensePower }, totalTime: dur, timeLeft: dur, name: '远征中', cost: c }]);
+                addLog(`出征 Lv.${enemyBase.level} 基地。`);
+            };
+
+            // === 绝对安全的渲染护城河 ===
+            if (screen === 'menu' || !playerCiv) {
+                return (
+                    <div className="flex flex-col h-full bg-[#020617] p-4 md:p-6 overflow-y-auto hide-scrollbar text-center items-center justify-center">
+                        <div className="mb-8 mt-4">
+                            <h1 className="text-4xl md:text-5xl font-black text-amber-500 tracking-[0.2em] drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] mb-2 uppercase">帝国时代 IV</h1>
+                            <p className="text-slate-400 font-mono text-[10px] md:text-xs tracking-widest">稳定重铸版 | sheep</p>
+                        </div>
+
+                        <div className="w-full max-w-md space-y-8">
+                            <div>
+                                <h3 className="text-amber-500/80 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3">设定难度阶梯</h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {Object.keys(DIFF_CONFIG).map(k => (
+                                        <button key={k} onClick={() => setDifficulty(k)}
+                                            className={`py-2 text-[10px] md:text-xs font-bold rounded-sm border transition-all ${difficulty === k ? `bg-slate-800 border-amber-500 ${DIFF_CONFIG[k].color} shadow-[0_0_10px_rgba(251,191,36,0.3)]` : 'bg-slate-900/50 border-slate-700 text-slate-500 hover:bg-slate-800'}`}>
+                                            {DIFF_CONFIG[k].label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pb-6">
+                                {Object.keys(CIV_DATA).map(k => {
+                                    const civ = CIV_DATA[k];
+                                    return (
+                                        <div key={civ.id} onClick={() => initGame(civ.id)}
+                                            className="game-card bg-slate-900 border border-slate-700 rounded p-3 md:p-4 text-center cursor-pointer hover:border-amber-500/50 group flex flex-col h-full">
+                                            <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{civ.icon}</div>
+                                            <div className={`text-sm md:text-lg font-black mb-1 ${civ.theme}`}>{civ.name}</div>
+                                            <div className="text-[10px] text-amber-400 font-bold mb-1">{civ.unique.name}</div>
+                                            <div className="text-[9px] text-slate-400 font-sans leading-tight mt-auto">{civ.desc}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // 提取 UI 显示属性
+            const civ = playerCiv;
+            
+            // 防止 rivalCiv 还没设置好就渲染
+            if (!rivalCiv) {
+                return <div className="flex items-center justify-center h-full text-amber-500">加载中...</div>;
+            }
+            
+            const diffCfg = DIFF_CONFIG[difficulty];
+            
+            const qp = () => { let c=0; tasks.forEach(t=>{if(t.type==='worker'||t.type==='unit')c++;}); return c; };
+            const activeQs = {}; tasks.forEach(t => { let q = t.type; if(t.type==='unit')q='u_'+t.payload; else if(t.type==='tech')q='t_'+t.payload.key; else if(t.type==='expedition')q='e_'+t.id; if(!activeQs[q])activeQs[q]={t, c:1}; else activeQs[q].c++; });
+
+            const calcPwr = (a, opp, tech, c) => {
+                let i=a.infantry||0; let ar=a.archer||0; let cv=a.cavalry||0;
+                if(c?.unique){ if(c.unique.type==='infantry')i*=c.unique.power; else if(c.unique.type==='archer')ar*=c.unique.power; else cv*=c.unique.power; }
+                let p = i*((opp.cavalry||0)>0?1.5:1.0) + ar*((opp.infantry||0)>0?1.5:1.0) + cv*((opp.archer||0)>0?1.5:1.0);
+                return (p||0.1) * (1 + tech*0.2);
+            };
+
+            const eArmyEst = { infantry: Math.floor(enemy.wave*4*0.33), archer: Math.floor(enemy.wave*4*0.33), cavalry: Math.floor(enemy.wave*4*0.34) };
+            const myEff = calcPwr(military, eArmyEst, techs.military, civ);
+            const eEff = calcPwr(eArmyEst, military, Math.floor(enemy.wave/4), rivalCiv);
+            const winR = (myEff / (myEff + eEff + 0.1)) * 100;
+            
+            const sInf = Math.floor(military.infantry*attackRatio); const sArc = Math.floor(military.archer*attackRatio); const sCav = Math.floor(military.cavalry*attackRatio);
+            const sTotal = sInf + sArc + sCav;
+            const sEff = calcPwr({infantry:sInf, archer:sArc, cavalry:sCav}, {infantry:enemyBase.defensePower/3, archer:enemyBase.defensePower/3, cavalry:enemyBase.defensePower/3}, techs.military, civ);
+            const eWinR = (sEff / (sEff + enemyBase.defensePower + 0.1)) * 100;
+
+            const rep = { i: '步兵', a: '弓兵', c: '骑兵', ui: false, ua: false, uc: false };
+            if(civ?.unique?.type==='infantry'){ rep.i = civ.unique.name; rep.ui = true; }
+            else if(civ?.unique?.type==='cavalry'){ rep.c = civ.unique.name; rep.uc = true; }
+            else if(civ?.unique) { rep.a = civ.unique.name; rep.ua = true; }
+
+            const wCost = civ.id === 'chinese' ? Math.floor(50 * civ.bonus.cost / 2) : Math.floor(50 * civ.bonus.cost);
+            const wCostNum = wCost;
+            const wTime = civ.id === 'chinese' ? 2 : 4;
+            const tCap = age===1?3 : age===2?6 : age===3?8 : 10;
+            const hMonks = tasks.filter(t=>t.type==='hunt').length;
+
+            return (
+                <div className={`flex flex-col h-full relative ${screen === 'game_over' && endReason !== 'defeat' ? 'ultimate-victory' : ''}`}>
+                    {/* HUD */}
+                    <div className="flex-none bg-slate-900 border-b border-slate-700 shadow-md z-40">
+                        <div className="flex justify-between items-center px-2 py-1.5 border-b border-slate-800 bg-slate-900/80">
+                            <div className="flex items-center gap-1.5">
+                                <span className={`text-sm font-black ${civ.theme}`}>{civ.name}</span>
+                                <span className="bg-amber-500/20 text-amber-500 text-[10px] px-1 rounded border border-amber-500/30">时代 {age}</span>
+                                <button onClick={()=>setPaused(true)} className="text-[10px] bg-slate-700/50 px-1.5 py-0.5 rounded text-slate-300 ml-1 active:scale-95 border border-slate-600">⚙️ 菜单</button>
+                            </div>
+                            {wonderDefense.active && <div className="text-xs text-yellow-400 font-bold animate-pulse">防守: {formatGameTime(wonderDefense.timer)}</div>}
+                            <div className="text-[11px] font-mono">
+                                <span className="text-slate-500 mr-1">人口</span>
+                                <span className={population.current + qp() >= population.max ? "text-red-500 font-bold" : "text-white font-bold"}>{population.current + qp()}/{population.max}</span>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 divide-x divide-slate-700 bg-slate-800/50">
+                            {['food','wood','gold','stone'].map(k => (
+                                <div key={k} className="text-center py-1">
+                                    <div className="flex items-center justify-center gap-1">
+                                        {getIcon(k)}<span className="text-[13px] font-black font-mono">{Math.floor(resources[k])}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* 流水线 */}
+                        {Object.keys(activeQs).length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto hide-scrollbar px-2 py-1.5 bg-slate-950/80 border-t border-slate-800 items-center min-h-[36px]">
+                                {Object.values(activeQs).map(q => (
+                                    <div key={q.t.id} className="flex-shrink-0 min-w-[90px] h-6 bg-slate-800 border border-white/10 rounded flex items-center px-1.5 relative overflow-hidden">
+                                        <div className={`absolute left-0 top-0 h-full ${getQueueBgColor(q.t.type)} smooth-progress`} style={{ width: `${((q.t.totalTime - q.t.timeLeft) / q.t.totalTime) * 100}%` }}></div>
+                                        <span className="relative z-10 text-[9px] font-bold truncate-text w-12">{q.t.name}</span>
+                                        <span className="relative z-10 text-[9px] font-mono text-amber-400 ml-auto">{q.t.timeLeft}s</span>
+                                        {q.c > 1 && <span className="relative z-10 text-[8px] text-slate-400 ml-1">+{q.c-1}</span>}
+                                        <button onClick={()=>cancel(q.t.id)} className="relative z-10 ml-1 text-red-500 font-bold text-[10px] px-1 active:scale-125">×</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 操作区 */}
+                    <div className="flex-1 overflow-y-auto p-2 space-y-3 pb-20">
+                        {/* 战情室 */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className={`rounded p-2 border ${wonderDefense.active ? 'breathe-gold bg-red-900/20' : 'border-red-900/50 bg-red-950/20'}`}>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-bold text-red-500 uppercase">老家防守</span>
+                                    <span className={`text-[11px] font-mono font-bold ${wonderDefense.active ? 'text-yellow-400':'text-white'}`}>{enemy.timer}s</span>
+                                </div>
+                                <div className="text-[8px] text-red-200">下一波: Lv.{enemy.wave}</div>
+                                <div className="flex justify-between text-[9px] mt-1 border-t border-red-800/50 pt-1">
+                                    <span className="text-red-400">敌:{eEff.toFixed(0)}</span>
+                                    <span className={winR > 50 ? 'text-emerald-400' : 'text-amber-500'}>防:{myEff.toFixed(0)} ({winR.toFixed(0)}%)</span>
+                                </div>
+                            </div>
+                            <div className="rounded p-2 border border-indigo-900/50 bg-indigo-950/20 flex flex-col justify-between">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] font-bold text-indigo-400 uppercase">远征出击</span>
+                                    <span className="text-[9px] text-indigo-300">毁Lv.{diffCfg.target}胜</span>
+                                </div>
+                                <div className="flex items-center gap-1 mt-1">
+                                    <span className="text-[8px] text-indigo-300">兵力</span>
+                                    <input type="range" min="0.1" max="1" step="0.1" value={attackRatio} onChange={e=>setAttackRatio(parseFloat(e.target.value))} className="flex-1" />
+                                </div>
+                                <button onClick={startExpedition} disabled={sTotal <= 0 || tasks.some(t=>t.type==='expedition')} className="mt-1.5 w-full bg-indigo-600/40 border border-indigo-500/50 py-1 rounded text-[9px] active:bg-indigo-600 disabled:opacity-30 flex justify-between px-2">
+                                    <span>出征({sTotal})</span>
+                                    <span className={eWinR > 50 ? 'text-emerald-400' : 'text-amber-400'}>胜:{eWinR.toFixed(0)}%</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 劳动力 */}
+                        <div className="bg-slate-800/50 border border-slate-700/50 rounded p-1.5">
+                            <div className="flex justify-between items-center mb-1 border-b border-slate-700 pb-0.5">
+                                <span className="text-[10px] font-bold text-amber-500">劳动力分配</span>
+                                <span className="text-[9px] text-slate-400">闲置: <span className="text-amber-400 font-bold">{workers.idle}</span> / {workers.total}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {['food','wood','gold','stone'].map(k => (
+                                    <div key={k} className="flex justify-between items-center bg-slate-900/50 p-1.5 rounded border border-slate-800">
+                                        <span className="text-[9px] text-slate-300 w-4">{k==='food'?'肉':k==='wood'?'木':k==='gold'?'金':'石'}</span>
+                                        <span className="font-mono text-[10px] font-bold text-white w-4 text-center">{workers[k]}</span>
+                                        <div className="flex gap-0.5">
+                                            <button onClick={()=>alterWorker(k,-1)} disabled={workers[k]===0} className="w-6 h-6 bg-slate-700 rounded text-xs active:bg-slate-600 disabled:opacity-30">-</button>
+                                            <button onClick={()=>alterWorker(k,1)} disabled={workers.idle===0} className="w-6 h-6 bg-slate-700 rounded text-xs active:bg-slate-600 disabled:opacity-30">+</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 建设 */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                            <button onClick={()=>enqueue('worker', null, {food: wCost}, wTime, '造村民')} disabled={resources.food<wCost || population.current+qp()>=population.max} className="game-card bg-slate-800 border border-slate-600 rounded py-2 text-center active:scale-95 disabled:opacity-40">
+                                <div className="text-[11px] font-bold text-slate-200">造村民</div>
+                                <div className="text-[8px] text-slate-400 mt-0.5">时:{wTime}s {civ.id==='chinese'&&<span className="text-red-400">(速)</span>}</div>
+                            </button>
+                            <button onClick={()=>enqueue('house', null, {wood: Math.floor(50*civ.bonus.cost)}, 4, '建房屋')} disabled={resources.wood<Math.floor(50*civ.bonus.cost)} className="game-card bg-slate-800 border border-slate-600 rounded py-2 text-center active:scale-95 disabled:opacity-40">
+                                <div className="text-[11px] font-bold text-slate-200">建房屋</div>
+                                <div className="text-[8px] text-slate-400 mt-0.5">+10人口</div>
+                            </button>
+                            <button onClick={()=>enqueue('mill', null, {wood: Math.floor(50*civ.bonus.cost)}, 5, '建磨坊')} disabled={resources.wood<Math.floor(50*civ.bonus.cost)} className="game-card bg-slate-800 border border-slate-600 rounded py-2 text-center active:scale-95 disabled:opacity-40">
+                                <div className="text-[11px] font-bold text-slate-200">建磨坊</div>
+                                <div className="text-[8px] text-slate-400 mt-0.5">农田+5%</div>
+                            </button>
+
+                            <button onClick={()=>enqueue('unit', 'infantry', {food:Math.floor(40*civ.bonus.cost), wood:Math.floor(20*civ.bonus.cost)}, 5, `训${rep.i}`)} disabled={resources.food<Math.floor(40*civ.bonus.cost) || resources.wood<Math.floor(20*civ.bonus.cost) || population.current+qp()>=population.max} className="bg-slate-800 border border-slate-600 rounded py-1.5 text-center active:scale-95 disabled:opacity-40">
+                                <div className="text-[11px] font-bold truncate-text text-slate-200">{rep.ui ? <span className="text-fuchsia-400">★{rep.i}</span> : rep.i}</div>
+                                <div className="text-[9px] text-amber-500 font-mono mt-0.5">x{military.infantry}</div>
+                            </button>
+                            <button onClick={()=>enqueue('unit', 'archer', {food:Math.floor(30*civ.bonus.cost), wood:Math.floor(30*civ.bonus.cost)}, 5, `训${rep.a}`)} disabled={resources.food<Math.floor(30*civ.bonus.cost) || resources.wood<Math.floor(30*civ.bonus.cost) || population.current+qp()>=population.max || age<2} className="bg-slate-800 border border-slate-600 rounded py-1.5 text-center active:scale-95 disabled:opacity-40 relative">
+                                <div className="text-[11px] font-bold truncate-text text-slate-200">{rep.ua ? <span className="text-fuchsia-400">★{rep.a}</span> : rep.a}</div>
+                                <div className="text-[9px] text-amber-500 font-mono mt-0.5">{age<2 ? '需时代II' : `x${military.archer}`}</div>
+                            </button>
+                            <button onClick={()=>enqueue('unit', 'cavalry', {food:Math.floor(60*civ.bonus.cost), gold:Math.floor(40*civ.bonus.cost)}, 6, `训${rep.c}`)} disabled={resources.food<Math.floor(60*civ.bonus.cost) || resources.gold<Math.floor(40*civ.bonus.cost) || population.current+qp()>=population.max || !(age>=3 || (civ.id==='french'&&age>=2))} className="bg-slate-800 border border-slate-600 rounded py-1.5 text-center active:scale-95 disabled:opacity-40 relative">
+                                <div className="text-[11px] font-bold truncate-text text-slate-200">{rep.uc ? <span className="text-fuchsia-400">★{rep.c}</span> : rep.c}</div>
+                                <div className="text-[9px] text-amber-500 font-mono mt-0.5">{!(age>=3 || (civ.id==='french'&&age>=2)) ? '需时代III' : `x${military.cavalry}`}</div>
+                            </button>
+
+                            <button onClick={()=>enqueue('barracks', null, {wood:Math.floor(150*civ.bonus.cost), stone:Math.floor(50*civ.bonus.cost)}, 6, '建兵营')} disabled={resources.wood<Math.floor(150*civ.bonus.cost) || resources.stone<Math.floor(50*civ.bonus.cost)} className="bg-slate-800 border border-slate-600 rounded p-1.5 flex justify-between items-center active:scale-95 col-span-3 disabled:opacity-40">
+                                <span className="text-[11px] font-bold text-slate-200">建兵营(军校) <span className="text-amber-400">x{buildings.barracks}</span></span>
+                                <span className="text-[9px] text-emerald-400">全军提速+50%</span>
+                            </button>
+                        </div>
+
+                        {/* 修道院 */}
+                        <div className="bg-yellow-950/30 border border-yellow-700/30 rounded p-1.5">
+                            <div className="flex justify-between items-center mb-1 border-b border-yellow-900/50 pb-0.5 px-1">
+                                <span className="text-[10px] font-bold text-yellow-500">修道院</span>
+                                <span className="text-[9px] text-yellow-200/80">圣物: <span className="text-yellow-400 font-bold">{relics}</span></span>
+                            </div>
+                            <div className="flex gap-1.5">
+                                <button onClick={()=>enqueue('unit', 'monks', {food:Math.floor(100*civ.bonus.cost), gold:Math.floor(100*civ.bonus.cost)}, 5, '训僧侣')} disabled={resources.food<Math.floor(100*civ.bonus.cost) || resources.gold<Math.floor(100*civ.bonus.cost) || population.current+qp()>=population.max || age<3} className="flex-1 bg-slate-800 border border-yellow-700/50 rounded py-1.5 active:scale-95 disabled:opacity-40 text-center">
+                                    <div className="text-[10px] font-bold text-slate-200">训僧侣 <span className="text-yellow-500">x{military.monks}</span></div>
+                                </button>
+                                <button onClick={()=>enqueue('hunt', null, {gold:50}, 30, '寻圣物')} disabled={military.monks - hMonks<=0 || resources.gold<50 || age<3} className="flex-1 bg-yellow-900/40 border border-yellow-600/50 rounded py-1.5 active:scale-95 disabled:opacity-40 text-center">
+                                    <div className="text-[10px] font-bold text-yellow-400">寻觅圣物(30s)</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 科技 */}
+                        <div className="grid grid-cols-4 gap-1.5">
+                            {[{ k: 'ecoFood', n: '农', b: '肉+15%' }, { k: 'ecoWood', n: '林', b: '木+15%' }, { k: 'ecoMine', n: '矿', b: '金石+15%' }, { k: 'military', n: '武', b: '战+20%' }].map(t => {
+                                const mult = civ.id === 'delhi' ? 0.5 : 1.0;
+                                const bFood = (t.k==='ecoFood' || t.k==='ecoWood') ? 50 : (t.k==='military' ? 100 : 0);
+                                const bWood = (t.k==='ecoFood' || t.k==='ecoWood' || t.k==='ecoMine') ? 50 : 0;
+                                const bGold = (t.k==='ecoMine' || t.k==='military') ? (t.k==='military'?100:50) : 0;
+                                
+                                const cFood = bFood ? Math.floor(Math.floor(bFood * civ.bonus.cost) * Math.pow(1.5, techs[t.k]) * mult) : 0;
+                                const cWood = bWood ? Math.floor(Math.floor(bWood * civ.bonus.cost) * Math.pow(1.5, techs[t.k]) * mult) : 0;
+                                const cGold = bGold ? Math.floor(Math.floor(bGold * civ.bonus.cost) * Math.pow(1.5, techs[t.k]) * mult) : 0;
+                                const c = { food: cFood, wood: cWood, gold: cGold };
+                                
+                                const m = techs[t.k] >= tCap;
+                                const afford = resources.food >= cFood && resources.wood >= cWood && resources.gold >= cGold;
+
+                                return (
+                                    <button key={t.k} onClick={()=>enqueue('tech', {key: t.k}, c, 6, `升${t.n}`)} disabled={m || !afford || tasks.some(tk=>tk.type==='tech' && tk.payload.key===t.k)} className="bg-slate-900 border border-white/5 py-1.5 rounded text-center active:scale-95 disabled:opacity-40 flex flex-col justify-between">
+                                        <div className="text-[10px] font-black text-amber-500">{t.n} <span className="text-[8px] text-white bg-slate-700 px-0.5 rounded">L{techs[t.k]}</span></div>
+                                        <div className="text-[7px] text-slate-400 mt-1 truncate-text px-1">{m ? `限L${tCap}` : formatCost(c)}</div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* 时代 */}
+                        <div className="space-y-1.5 pb-4">
+                            {age === 1 && <button onClick={()=>enqueue('age', 2, {food:Math.floor(400*civ.bonus.cost), gold:Math.floor(200*civ.bonus.cost)}, 10, '进封建')} disabled={resources.food<Math.floor(400*civ.bonus.cost) || resources.gold<Math.floor(200*civ.bonus.cost) || tasks.some(t=>t.type==='age')} className="w-full bg-amber-800/80 border border-amber-600/50 py-2.5 rounded font-black text-[11px] active:bg-amber-700 disabled:opacity-40 tracking-widest">封建时代II</button>}
+                            {age === 2 && <button onClick={()=>enqueue('age', 3, {food:Math.floor(1200*civ.bonus.cost), gold:Math.floor(600*civ.bonus.cost)}, 10, '进城堡')} disabled={resources.food<Math.floor(1200*civ.bonus.cost) || resources.gold<Math.floor(600*civ.bonus.cost) || tasks.some(t=>t.type==='age')} className="w-full bg-amber-800/80 border border-amber-600/50 py-2.5 rounded font-black text-[11px] active:bg-amber-700 disabled:opacity-40 tracking-widest">城堡时代III</button>}
+                            {age === 3 && <button onClick={()=>enqueue('age', 4, {food:Math.floor(2400*civ.bonus.cost), gold:Math.floor(1200*civ.bonus.cost)}, 15, '进帝王')} disabled={resources.food<Math.floor(2400*civ.bonus.cost) || resources.gold<Math.floor(1200*civ.bonus.cost) || tasks.some(t=>t.type==='age')} className="w-full bg-amber-800/80 border border-amber-600/50 py-2.5 rounded font-black text-[11px] active:bg-amber-700 disabled:opacity-40 tracking-widest">帝王时代IV</button>}
+                            {age === 4 && !wonderDefense.active && <button onClick={()=>enqueue('wonder', null, {food:3000, wood:3000, gold:3000, stone:3000}, 20, '建奇观')} disabled={resources.food<3000 || resources.wood<3000 || resources.gold<3000 || resources.stone<3000 || tasks.some(t=>t.type==='wonder')} className="w-full bg-gradient-to-r from-yellow-700/60 to-yellow-600/60 border border-yellow-500/60 py-3 rounded font-black text-[11px] text-yellow-300 active:scale-95 disabled:opacity-40 tracking-widest">建造奇观 (防守获胜)</button>}
+                        </div>
+                    </div>
+
+                    {/* 日志 */}
+                    <div className="flex-none h-16 bg-black/80 border-t border-white/5 p-1.5 text-[9px] font-mono z-10">
+                        <div ref={logRef} className="h-full overflow-y-auto hide-scrollbar space-y-0.5">
+                            {logs.map((l, i) => (
+                                <div key={i} className="flex gap-1.5">
+                                    <span className="text-slate-600 shrink-0">[{l.t}]</span>
+                                    <span className={(l.m||'').includes('失败')||(l.m||'').includes('覆灭')||(l.m||'').includes('溃败')||(l.m||'').includes('崩溃') ? 'text-red-400' : (l.m||'').includes('捷报')||(l.m||'').includes('大捷')||(l.m||'').includes('落成') ? 'text-emerald-400' : 'text-slate-300'}>{l.m}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 弹窗: 战报 */}
+                    {battleReport && (
+                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 p-6 backdrop-blur-sm">
+                            <div className={`w-full max-w-xs border-2 rounded p-5 text-center shadow-[0_0_30px_rgba(0,0,0,0.8)] ${battleReport.win ? 'border-emerald-500 bg-emerald-950/60' : 'border-red-600 bg-red-950/60'}`}>
+                                <h3 className={`text-xl font-black mb-2 tracking-widest ${battleReport.win ? 'text-emerald-400' : 'text-red-500 animate-pulse'}`}>{battleReport.title}</h3>
+                                <p className="text-slate-300 text-[11px] mb-4 leading-relaxed">{battleReport.desc}</p>
+                                <div className="bg-black/60 rounded p-4 mb-5 space-y-2 text-[10px] font-mono">
+                                    <div className="flex justify-between"><span>我方折损:</span> <span className="text-red-400 font-bold">-{battleReport.myLoss}</span></div>
+                                    {battleReport.vLoss > 0 && <div className="flex justify-between"><span>平民遇害:</span> <span className="text-red-500 font-bold">-{battleReport.vLoss}</span></div>}
+                                    {battleReport.loot > 0 && <div className="flex justify-between"><span>掠夺资源:</span> <span className="text-yellow-400 font-bold">每种+{battleReport.loot}</span></div>}
+                                </div>
+                                <button onClick={() => { setBattleReport(null); setPaused(false); }} className="w-full py-2.5 font-bold tracking-widest bg-slate-800 border border-slate-700 text-white rounded text-[11px] active:scale-95">确认战果</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 弹窗: 菜单 */}
+                    {paused && !battleReport && screen === 'playing' && (
+                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-[110] p-6 backdrop-blur-sm">
+                            <div className="w-full max-w-xs bg-slate-900 border border-white/10 p-6 rounded text-center">
+                                <h3 className="text-amber-500 font-black tracking-widest mb-6 text-sm">游戏已暂停</h3>
+                                <div className="space-y-4">
+                                    <button onClick={() => setPaused(false)} className="w-full py-2.5 bg-emerald-800 text-white text-[11px] font-bold rounded">继续战斗</button>
+                                    <button onClick={() => resetGame(playerCiv.id)} className="w-full py-2.5 bg-slate-800 text-slate-300 text-[11px] font-bold rounded">重新开局</button>
+                                    <button onClick={() => resetGame()} className="w-full py-2.5 bg-red-900/60 text-red-100 text-[11px] font-bold rounded">退回主界面</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 弹窗: 终局 */}
+                    {(screen === 'game_over' || screen === 'victory') && (
+                        <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-[100] p-4">
+                            <div className="bg-slate-900/80 border border-amber-600/50 p-6 rounded w-full max-w-xs text-center z-10 shadow-[0_0_40px_rgba(0,0,0,0.8)] backdrop-blur">
+                                <h2 className={`text-3xl font-black mb-2 tracking-widest ${endReason === 'wonder' || endReason === 'conquest' ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-red-500'}`}>
+                                    {endReason === 'wonder' ? '奇观胜利' : endReason === 'conquest' ? '征服胜利' : '文明覆灭'}
+                                </h2>
+                                <p className="text-slate-400 mb-6 text-[10px]">
+                                    {endReason === 'wonder' ? '奇观屹立不倒，赢得了荣耀！' : endReason === 'conquest' ? '彻底粉碎了宿敌的野心！' : '城镇被付之一炬。'}
+                                </p>
+                                <div className="bg-slate-800/80 border border-slate-700 p-4 rounded text-left mb-6 space-y-2 text-[10px]">
+                                    <div className="text-center font-bold text-amber-500 border-b border-slate-600 pb-1.5 mb-3">史诗数据</div>
+                                    <div className="flex justify-between"><span className="text-slate-400">存活时间:</span> <span className="text-slate-200 font-mono">{formatGameTime(gameTime)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">总资源量:</span> <span className="text-yellow-400 font-mono">{Math.floor(stats.res).toLocaleString()}</span></div>
+                                    <div className="flex justify-between items-center border-t border-slate-700 pt-1.5 mt-1.5">
+                                        <span className="text-slate-400">杀敌 / 阵亡:</span> <span className="font-mono"><span className="text-emerald-400">{stats.kills}</span> / <span className="text-red-400">{stats.lost}</span></span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-slate-900 px-1.5 py-1 rounded">
+                                        <span className="text-slate-400">战损比(K/D):</span> <span className="text-amber-400 font-mono font-bold text-[12px]">{(stats.kills / Math.max(1, stats.lost)).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => resetGame()} className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-amber-600/50 text-amber-500 text-[11px] font-bold rounded transition">返回主菜单</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ErrorBoundary><App /></ErrorBoundary>);
+    </script>
+</body>
+</html>
