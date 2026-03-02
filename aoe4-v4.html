@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>帝国时代放置版</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { 
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); 
+    color: #fff; font-family: 'Noto Serif SC', sans-serif; 
+    min-height: 100vh; min-height: 100dvh; overflow: hidden;
+}
+.btn { 
+    background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%); 
+    border: none; border-radius: 12px; color: white; padding: 14px 20px; 
+    font-weight: bold; cursor: pointer; font-size: 14px; min-height: 50px;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); transition: transform 0.1s;
+}
+.btn:active { transform: scale(0.95); }
+.btn:disabled { background: #374151; color: #9ca3af; box-shadow: none; }
+.btn-green { background: linear-gradient(180deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+.btn-yellow { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); }
+.btn-red { background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+.card { background: rgba(31, 41, 55, 0.8); border-radius: 16px; padding: 16px; }
+.popup { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.popup-content { background: #1f2937; border: 3px solid #fbbf24; border-radius: 20px; padding: 32px; max-width: 90vw; text-align: center; }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #7c3aed; padding: 12px 24px; border-radius: 12px; font-weight: bold; animation: slide 0.3s; z-index: 50; }
+@keyframes slide { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } }
+.progress { height: 8px; background: #374151; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); transition: width 0.5s; }
+.battle-scene { 
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%); 
+    border-radius: 16px; padding: 16px; margin: 12px; position: relative; overflow: hidden;
+}
+.unit { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; margin: 2px; font-size: 18px; }
+.unit-player { background: #3b82f6; }
+.unit-enemy { background: #ef4444; }
+.floating-damage { position: absolute; color: #fbbf24; font-weight: bold; font-size: 14px; animation: floatUp 1s forwards; }
+@keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-30px); opacity: 0; } }
+</style>
+</head>
+<body class="p-4">
+<!-- 菜单 -->
+<div id="menuScreen" class="flex flex-col items-center justify-center min-h-[80vh] gap-6">
+    <div class="text-center">
+        <h1 class="text-5xl font-black text-yellow-400 mb-2">⚔️ 帝国时代</h1>
+        <p class="text-gray-400">放置版</p>
+    </div>
+    <div class="w-full max-w-sm space-y-4">
+        <div>
+            <p class="text-yellow-400 text-sm mb-2">🏰 选择文明</p>
+            <div class="grid grid-cols-2 gap-3" id="civList"></div>
+        </div>
+        <button class="btn btn-yellow w-full text-lg" onclick="startGame()" id="startBtn" disabled>开始游戏</button>
+    </div>
+</div>
+
+<!-- 游戏 -->
+<div id="gameScreen" class="hidden space-y-4">
+    <!-- 顶部信息 -->
+    <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <span id="civName" class="text-yellow-400 font-bold">-</span>
+            <span class="bg-purple-600 px-2 py-1 rounded-full text-xs" id="ageDisplay">黑暗</span>
+        </div>
+        <div class="text-sm text-gray-400">
+            <span>⏱️ <span id="gameTime">00:00</span></span>
+        </div>
+    </div>
+    
+    <!-- 资源 -->
+    <div class="card flex justify-around text-center">
+        <div><span class="text-xl">🔴</span><div class="text-2xl font-bold" id="resFood">150</div></div>
+        <div><span class="text-xl">🟤</span><div class="text-2xl font-bold" id="resWood">150</div></div>
+        <div><span class="text-xl">🟡</span><div class="text-2xl font-bold" id="resGold">100</div></div>
+        <div><span class="text-xl">⚪</span><div class="text-2xl font-bold" id="resStone">0</div></div>
+    </div>
+    
+    <!-- 人口 -->
+    <div class="flex items-center gap-4 px-2">
+        <span class="text-sm">👥 <span id="popDisplay">5/10</span></span>
+        <div class="progress flex-1"><div class="progress-fill" id="popBar" style="width: 50%"></div></div>
+    </div>
+    
+    <!-- 战斗场景 -->
+    <div class="battle-scene">
+        <div class="text-center text-sm text-gray-400 mb-2">⚔️ 战场</div>
+        <div class="flex justify-between items-center">
+            <div id="playerUnits" class="flex flex-wrap justify-start max-w-[45%]"></div>
+            <div class="text-yellow-400 font-bold text-lg">VS</div>
+            <div id="enemyUnits" class="flex flex-wrap justify-end max-w-[45%]"></div>
+        </div>
+        <div class="mt-3 flex justify-between text-xs">
+            <span class="text-blue-400">我军: <span id="myPower">0</span></span>
+            <span class="text-red-400">敌军: <span id="enemyPower">0</span></span>
+        </div>
+        <!-- 敌人进度条 -->
+        <div class="mt-2">
+            <div class="text-xs text-gray-400 mb-1">敌方基地: <span id="enemyHp">100</span>%</div>
+            <div class="progress"><div class="progress-fill bg-red-500" id="enemyBar" style="width: 100%"></div></div>
+        </div>
+    </div>
+    
+    <!-- 波次信息 -->
+    <div class="text-center text-sm text-gray-400">
+        第 <span id="waveNum" class="text-yellow-400 font-bold">0</span> 波 · 下一波 <span id="waveTimer" class="text-white">3:00</span>
+    </div>
+    
+    <!-- 操作区 -->
+    <div class="space-y-3">
+        <!-- 村民 -->
+        <div class="flex gap-2">
+            <button class="btn flex-1" onclick="trainVillager()">
+                👨‍🌾 造村民 <span class="text-xs opacity-70">(50🔴)</span>
+            </button>
+            <button class="btn" onclick="upgradeAge()">⬆️ 升级时代</button>
+        </div>
+        
+        <!-- 军事 -->
+        <div class="flex gap-2 overflow-x-auto">
+            <button class="btn" onclick="trainUnit('infantry')" id="btnInfantry" disabled>
+                🗡️ 步兵 <span class="text-xs opacity-70">40🔴</span>
+            </button>
+            <button class="btn" onclick="trainUnit('archer')" id="btnArcher" disabled>
+                🏹 弓兵 <span class="text-xs opacity-70">30🔴</span>
+            </button>
+            <button class="btn" onclick="trainUnit('cavalry')" id="btnCavalry" disabled>
+                🐎 骑兵 <span class="text-xs opacity-70">60🔴</span>
+            </button>
+        </div>
+        
+        <!-- 建筑 -->
+        <div class="flex gap-2">
+            <button class="btn flex-1" onclick="build('house')">🏠 住房 (+10人口)</button>
+            <button class="btn flex-1" onclick="build('barracks')" id="btnBarracks" disabled>⚔️ 兵营</button>
+        </div>
+        
+        <!-- 进攻 -->
+        <button class="btn btn-red w-full text-lg" onclick="attack()">⚔️ 发起进攻!</button>
+    </div>
+</div>
+
+<!-- 弹窗 -->
+<div id="popup" class="popup hidden">
+    <div class="popup-content">
+        <h2 id="popupTitle" class="text-3xl font-black text-yellow-400 mb-4">胜利!</h2>
+        <p id="popupDesc" class="text-gray-300 mb-6">恭喜!</p>
+        <button class="btn btn-yellow" onclick="backToMenu()">再来一局</button>
+    </div>
+</div>
+
+<!-- 提示 -->
+<div id="toast" class="toast hidden"></div>
+
+<script>
+// ===== 配置 =====
+const CIVS = {
+    english: { name: '英格兰', icon: '🏰', bonus: '村民产出+15%' },
+    french: { name: '法兰西', icon: '👑', bonus: '骑兵攻击+20%' },
+    mongols: { name: '蒙古', icon: '🏹', bonus: '斥候移动+30%' },
+    chinese: { name: '中国', icon: '🐉', bonus: '全产出+10%' }
+};
+
+const AGES = ['黑暗', '封建', '城堡', '帝王'];
+const AGE_COST = [
+    { food: 400, gold: 200 },
+    { food: 800, gold: 400 },
+    { food: 1600, gold: 800 }
+];
+
+const UNIT_STATS = {
+    villager: { cost: { food: 50 }, power: 2, icon: '👨‍🌾' },
+    infantry: { cost: { food: 40, wood: 20 }, power: 8, icon: '🗡️' },
+    archer: { cost: { food: 30, wood: 30 }, power: 10, icon: '🏹' },
+    cavalry: { cost: { food: 60, gold: 40 }, power: 18, icon: '🐎' }
+};
+
+// ===== 状态 =====
+let game = {
+    civ: null,
+    age: 0,
+    time: 0,
+    resources: { food: 150, wood: 150, gold: 100, stone: 0 },
+    pop: { current: 5, max: 10 },
+    wave: 0,
+    waveTimer: 180,
+    enemyHp: 100,
+    enemyLevel: 1,
+    units: [],
+    buildings: { house: 0, barracks: 0 },
+    battleLog: []
+};
+
+let loop = null;
+
+// ===== 菜单 =====
+function initMenu() {
+    const list = document.getElementById('civList');
+    list.innerHTML = Object.entries(CIVS).map(([id, c]) => `
+        <div class="card cursor-pointer text-center border-2 border-transparent hover:border-yellow-400" onclick="selectCiv('${id}')" id="civ-${id}">
+            <div class="text-4xl mb-1">${c.icon}</div>
+            <div class="font-bold text-yellow-400">${c.name}</div>
+            <div class="text-xs text-gray-400">${c.bonus}</div>
+        </div>
+    `).join('');
+}
+
+function selectCiv(id) {
+    game.civ = CIVS[id];
+    document.querySelectorAll('#civList > div').forEach(d => d.classList.remove('border-yellow-400', 'bg-gray-700'));
+    document.getElementById(`civ-${id}`).classList.add('border-yellow-400', 'bg-gray-700');
+    document.getElementById('startBtn').disabled = false;
+}
+
+function startGame() {
+    if (!game.civ) return;
+    
+    // 初始化
+    game = {
+        civ: game.civ,
+        age: 0, time: 0,
+        resources: { food: 150, wood: 150, gold: 100, stone: 0 },
+        pop: { current: 5, max: 10 },
+        wave: 0, waveTimer: 180,
+        enemyHp: 100, enemyLevel: 1,
+        units: [
+            { type: 'villager', level: 1, exp: 0 },
+            { type: 'villager', level: 1, exp: 0 },
+            { type: 'villager', level: 1, exp: 0 },
+            { type: 'villager', level: 1, exp: 0 },
+            { type: 'villager', level: 1, exp: 0 }
+        ],
+        buildings: { house: 0, barracks: 0 },
+        battleLog: []
+    };
+    
+    document.getElementById('menuScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    
+    if (loop) clearInterval(loop);
+    loop = setInterval(gameLoop, 1000);
+    
+    updateUI();
+}
+
+// ===== 游戏循环 =====
+function gameLoop() {
+    game.time++;
+    
+    // 村民自动采集
+    const villagers = game.units.filter(u => u.type === 'villager');
+    const bonus = game.civ.name === '中国' ? 1.1 : game.civ.name === 'english' ? 1.15 : 1;
+    villagers.forEach(v => {
+        const rate = 3 * bonus * (1 + v.level * 0.1);
+        game.resources.food += rate;
+    });
+    
+    // 资源自动产出
+    game.resources.wood += game.units.filter(u => u.type !== 'villager').length * 0.5;
+    
+    // 敌人波次
+    game.waveTimer--;
+    if (game.waveTimer <= 0) {
+        game.wave++;
+        game.waveTimer = Math.max(60, 180 - game.wave * 5);
+        spawnWave();
+    }
+    
+    // 自动战斗
+    autoBattle();
+    
+    updateUI();
+}
+
+// ===== 战斗 =====
+function autoBattle() {
+    const soldiers = game.units.filter(u => u.type !== 'villager');
+    const myPower = soldiers.reduce((sum, u) => sum + getPower(u), 0);
+    
+    if (myPower > 0 && game.enemyHp > 0) {
+        const damage = Math.floor(myPower * 0.1);
+        game.enemyHp -= damage;
+        
+        if (game.enemyHp <= 0) {
+            game.enemyLevel++;
+            game.enemyHp = 80 + game.enemyLevel * 40;
+            game.resources.food += 200;
+            game.resources.gold += 100;
+            showToast('🎉 进攻成功! 获得资源!');
+        }
+        
+        if (game.enemyLevel >= 5) {
+            showPopup('胜利!', '恭喜通关!');
+        }
+    }
+}
+
+function getPower(unit) {
+    const stats = UNIT_STATS[unit.type];
+    return stats.power * (1 + (unit.level - 1) * 0.2);
+}
+
+function spawnWave() {
+    const enemyPower = Math.floor(game.wave * 12);
+    const soldiers = game.units.filter(u => u.type !== 'villager');
+    const myPower = soldiers.reduce((sum, u) => sum + getPower(u), 0);
+    
+    showToast(`💀 第${game.wave}波来袭!`);
+    
+    if (myPower < enemyPower) {
+        // 战败，扣资源
+        game.resources.food = Math.max(0, game.resources.food - 150);
+        game.resources.wood = Math.max(0, game.resources.wood - 100);
+        showToast('❌ 防守失败! 被掠夺!');
+    } else {
+        showToast('✅ 防守成功!');
+    }
+}
+
+// ===== 操作 =====
+function trainVillager() {
+    if (game.resources.food < 50) { showToast('🔴 食物不足!'); return; }
+    if (game.pop.current >= game.pop.max) { showToast('👥 人口满了!'); return; }
+    
+    game.resources.food -= 50;
+    game.pop.current++;
+    game.units.push({ type: 'villager', level: 1, exp: 0 });
+    showToast('👨‍🌾 村民+1');
+    updateUI();
+}
+
+function trainUnit(type) {
+    const stats = UNIT_STATS[type];
+    const cost = stats.cost;
+    
+    if (game.resources.food < (cost.food || 0) || game.resources.wood < (cost.wood || 0) || game.resources.gold < (cost.gold || 0)) {
+        showToast('❌ 资源不足!'); return;
+    }
+    if (game.pop.current >= game.pop.max) { showToast('👥 人口满了!'); return; }
+    
+    game.resources.food -= (cost.food || 0);
+    game.resources.wood -= (cost.wood || 0);
+    game.resources.gold -= (cost.gold || 0);
+    game.pop.current++;
+    game.units.push({ type: type, level: 1, exp: 0 });
+    showToast(`${stats.icon} ${type}+1`);
+    updateUI();
+}
+
+function build(type) {
+    if (type === 'house') {
+        if (game.resources.wood < 30) { showToast('❌ 木材不足!'); return; }
+        game.resources.wood -= 30;
+        game.buildings.house++;
+        game.pop.max += 10;
+        showToast('🏠 住房+1');
+    } else if (type === 'barracks') {
+        if (game.resources.wood < 150 || game.resources.stone < 50) { showToast('❌ 资源不足!'); return; }
+        game.resources.wood -= 150;
+        game.resources.stone -= 50;
+        game.buildings.barracks++;
+        showToast('⚔️ 兵营+1');
+    }
+    updateUI();
+}
+
+function upgradeAge() {
+    if (game.age >= 3) return;
+    const cost = AGE_COST[game.age];
+    if (game.resources.food < cost.food || game.resources.gold < cost.gold) {
+        showToast('❌ 资源不足!'); return;
+    }
+    game.resources.food -= cost.food;
+    game.resources.gold -= cost.gold;
+    game.age++;
+    showToast(`⬆️ 进入${AGES[game.age]}!`);
+    updateUI();
+}
+
+function attack() {
+    const soldiers = game.units.filter(u => u.type !== 'villager');
+    if (soldiers.length === 0) { showToast('❌ 没有军队!'); return; }
+    
+    const myPower = soldiers.reduce((sum, u) => sum + getPower(u), 0);
+    const damage = Math.floor(myPower * 0.5);
+    game.enemyHp -= damage;
+    
+    showToast(`⚔️ 进攻! 造成 ${damage} 伤害!`);
+    
+    if (game.enemyHp <= 0) {
+        game.enemyLevel++;
+        game.enemyHp = 80 + game.enemyLevel * 40;
+        game.resources.food += 300;
+        game.resources.gold += 200;
+        showToast('🎉 摧毁敌方基地!');
+        
+        if (game.enemyLevel >= 5) {
+            showPopup('胜利!', '恭喜通关!');
+        }
+    }
+    updateUI();
+}
+
+// ===== UI =====
+function updateUI() {
+    document.getElementById('civName').textContent = game.civ?.name || '-';
+    document.getElementById('ageDisplay').textContent = AGES[game.age];
+    document.getElementById('gameTime').textContent = formatTime(game.time);
+    document.getElementById('resFood').textContent = Math.floor(game.resources.food);
+    document.getElementById('resWood').textContent = Math.floor(game.resources.wood);
+    document.getElementById('resGold').textContent = Math.floor(game.resources.gold);
+    document.getElementById('resStone').textContent = Math.floor(game.resources.stone);
+    document.getElementById('popDisplay').textContent = game.pop.current + '/' + game.pop.max;
+    document.getElementById('popBar').style.width = (game.pop.current / game.pop.max * 100) + '%';
+    document.getElementById('waveNum').textContent = game.wave;
+    document.getElementById('waveTimer').textContent = formatTime(game.waveTimer);
+    document.getElementById('enemyHp').textContent = Math.max(0, game.enemyHp);
+    document.getElementById('enemyBar').style.width = Math.max(0, game.enemyHp) + '%';
+    
+    // 军队
+    const soldiers = game.units.filter(u => u.type !== 'villager');
+    const myPower = soldiers.reduce((sum, u) => sum + getPower(u), 0);
+    document.getElementById('myPower').textContent = myPower;
+    document.getElementById('enemyPower').textContent = Math.floor(game.wave * 12);
+    
+    // 渲染单位
+    const pUnits = document.getElementById('playerUnits');
+    const eUnits = document.getElementById('enemyUnits');
+    pUnits.innerHTML = game.units.slice(0, 8).map(u => 
+        `<div class="unit unit-player">${UNIT_STATS[u.type].icon}</div>`
+    ).join('');
+    eUnits.innerHTML = Array(Math.min(game.wave, 8)).fill(0).map(() => 
+        `<div class="unit unit-enemy">💀</div>`
+    ).join('');
+    
+    // 按钮状态
+    const ageCost = game.age < 3 ? AGE_COST[game.age] : null;
+    document.querySelector('#gameScreen button:nth-child(2)').disabled = game.age >= 3 || !ageCost || game.resources.food < ageCost.food || game.resources.gold < ageCost.gold;
+    document.getElementById('btnInfantry').disabled = !game.buildings.barracks || game.age < 1;
+    document.getElementById('btnArcher').disabled = game.age < 1;
+    document.getElementById('btnCavalry').disabled = game.age < 2;
+    document.getElementById('btnBarracks').disabled = game.resources.wood < 150 || game.resources.stone < 50;
+}
+
+function formatTime(sec) {
+    return Math.floor(sec / 60).toString().padStart(2, '0') + ':' + (sec % 60).toString().padStart(2, '0');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), 2500);
+}
+
+function showPopup(title, desc) {
+    document.getElementById('popupTitle').textContent = title;
+    document.getElementById('popupDesc').textContent = desc;
+    document.getElementById('popup').classList.remove('hidden');
+    if (loop) clearInterval(loop);
+}
+
+function backToMenu() {
+    document.getElementById('popup').classList.add('hidden');
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('menuScreen').classList.remove('hidden');
+    if (loop) clearInterval(loop);
+}
+
+initMenu();
+</script>
+</body>
+</html>
