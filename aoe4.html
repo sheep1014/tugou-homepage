@@ -170,11 +170,27 @@
                 const rCiv = CIV_DATA[otherCivs[Math.floor(Math.random() * otherCivs.length)]];
                 setRivalCiv(rCiv);
                 setEnemy({ wave: 1, timer: DIFF_CONFIG[difficulty].baseTimer, army: { infantry: 0, archer: 0, cavalry: 0 } });
+                setGameTime(0);
+                setResources({ food: 200, wood: 200, gold: 100, stone: 0 });
+                setWorkers({ total: 6, idle: 0, food: 6, wood: 0, gold: 0, stone: 0 });
+                setMilitary({ infantry: 0, archer: 0, cavalry: 0, monks: 0 });
+                setBuildings({ mills: 0, houses: 0, barracks: 0 });
+                setAge(1); setPopulation({ current: 6, max: 10 });
+                setTechs({ ecoFood: 0, ecoWood: 0, ecoMine: 0, military: 0 });
+                setRelics(0); setTasks([]); setLogs([]);
+                setEnemyBase({ level: 1, defensePower: 30 });
+                setBattleReport(null); setWonderDefense({ active: false, timer: 300 });
+                setStats({ res: 0, kills: 0, lost: 0, vils: 0, expeditions: 0 });
+                setEndReason(null); setAttackRatio(0.5); setPaused(false);
                 setScreen('playing');
                 addLog(`统帅，选择了 ${civ.name}。`);
             };
 
-            const resetGame = () => {
+            const resetGame = (civId) => {
+                if (civId && playerCiv) {
+                    initGame(civId);
+                    return;
+                }
                 setPlayerCiv(null); setRivalCiv(null); setGameTime(0);
                 setResources({ food: 200, wood: 200, gold: 100, stone: 0 });
                 setWorkers({ total: 6, idle: 0, food: 6, wood: 0, gold: 0, stone: 0 });
@@ -188,6 +204,31 @@
                 setStats({ res: 0, kills: 0, lost: 0, vils: 0, expeditions: 0 });
                 setEndReason(null); setAttackRatio(0.5); setPaused(false);
                 setScreen('menu');
+            };
+
+            const checkCost = (c) => {
+                if (!c) return true;
+                return resources.food >= (c.food||0) && resources.wood >= (c.wood||0) && resources.gold >= (c.gold||0) && resources.stone >= (c.stone||0);
+            };
+
+            const applyCost = (c) => {
+                if (!c) return;
+                setResources(r => ({
+                    food: Math.max(0, r.food - (c.food||0)),
+                    wood: Math.max(0, r.wood - (c.wood||0)),
+                    gold: Math.max(0, r.gold - (c.gold||0)),
+                    stone: Math.max(0, r.stone - (c.stone||0))
+                }));
+            };
+
+            const alterWorker = (type, delta) => {
+                if (delta > 0) {
+                    if (workers.idle <= 0) return;
+                    setWorkers(w => ({ ...w, [type]: w[type] + 1, idle: w.idle - 1 }));
+                } else {
+                    if (workers[type] <= 0) return;
+                    setWorkers(w => ({ ...w, [type]: w[type] - 1, idle: w.idle + 1 }));
+                }
             };
 
             // === 核心：绝对无闭包隐患的定时器 ===
