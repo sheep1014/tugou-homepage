@@ -1,421 +1,104 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>武汉+荆州旅行手帐 🏃‍♂️💨</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary: #7C9EB2;
-            --secondary: #B8D4E3;
-            --accent: #F4A896;
-            --bg: #F8FBFC;
-            --card: #FFFFFF;
-            --text: #2C3E50;
-            --text-light: #7F8C8D;
-        }
-        
-        body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background: linear-gradient(180deg, #E8F4F8 0%, #F8FBFC 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .book {
-            max-width: 520px;
-            margin: 0 auto;
-            background: var(--card);
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(124, 158, 178, 0.2);
-            overflow: hidden;
-        }
-        
-        /* 封面 */
-        .cover {
-            background: linear-gradient(135deg, #7C9EB2 0%, #B8D4E3 50%, #E8F4F8 100%);
-            padding: 50px 30px;
-            text-align: center;
-        }
-        
-        .cover h1 {
-            color: white;
-            font-size: 28px;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .cover .subtitle {
-            color: rgba(255,255,255,0.95);
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
-        
-        .cover .date {
-            display: inline-block;
-            background: rgba(255,255,255,0.25);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 10px 24px;
-            border-radius: 25px;
-            margin-top: 25px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        /* 装饰 */
-        .cover .deco {
-            position: absolute;
-            font-size: 24px;
-            opacity: 0.3;
-        }
-        
-        /* 费用卡片 */
-        .cost-section {
-            background: var(--bg);
-            padding: 25px 30px;
-            border-bottom: 1px solid #E8F4F8;
-        }
-        
-        .cost-title {
-            text-align: center;
-            color: var(--primary);
-            font-size: 14px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        
-        .costs {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        
-        .cost-item {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(124, 158, 178, 0.1);
-            flex: 1;
-            max-width: 110px;
-        }
-        
-        .cost-icon { font-size: 22px; display: block; margin-bottom: 6px; }
-        .cost-label { color: var(--text-light); font-size: 11px; margin-bottom: 4px; }
-        .cost-value { color: var(--text); font-weight: 700; font-size: 15px; }
-        .cost-person { color: #BDC3C7; font-size: 10px; margin-top: 2px; }
-        
-        /* 每日行程 */
-        .day {
-            padding: 28px 30px;
-            border-bottom: 1px solid #F0F5F8;
-        }
-        
-        .day:last-child { border-bottom: none; }
-        
-        .day-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .day-badge {
-            background: var(--primary);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 15px;
-            font-weight: 600;
-            font-size: 12px;
-        }
-        
-        .day-title {
-            font-size: 18px;
-            color: var(--text);
-            font-weight: 600;
-        }
-        
-        .day-theme {
-            font-size: 11px;
-            color: var(--accent);
-            margin-left: auto;
-            font-weight: 500;
-        }
-        
-        .timeline {
-            position: relative;
-            padding-left: 24px;
-        }
-        
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 8px;
-            bottom: 8px;
-            width: 2px;
-            background: linear-gradient(180deg, var(--primary), var(--secondary));
-            border-radius: 2px;
-        }
-        
-        .event {
-            position: relative;
-            margin-bottom: 16px;
-        }
-        
-        .event:last-child { margin-bottom: 0; }
-        
-        .event::before {
-            content: '';
-            position: absolute;
-            left: -24px;
-            top: 6px;
-            width: 8px;
-            height: 8px;
-            background: var(--primary);
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(124, 158, 178, 0.3);
-        }
-        
-        .event-time {
-            color: var(--accent);
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-        
-        .event-content {
-            color: var(--text);
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .event-note {
-            color: #BDC3C7;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        
-        /* 特别内容 */
-        .highlight {
-            background: linear-gradient(135deg, #FEF6F3, #FDF8F6);
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin: 14px 0;
-        }
-        
-        .highlight-title {
-            color: var(--accent);
-            font-size: 13px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        /* 晚餐推荐 */
-        .food-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        
-        .food-item {
-            background: white;
-            border: 1px solid #F0E8E5;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--text-light);
-        }
-        
-        .food-hot {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-        
-        /* 页脚 */
-        .footer {
-            background: linear-gradient(135deg, var(--primary), #9BB5C7);
-            padding: 35px 30px;
-            text-align: center;
-        }
-        
-        .footer-text {
-            color: white;
-            font-size: 16px;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .made-by {
-            color: rgba(255,255,255,0.7);
-            font-size: 11px;
-        }
-        
-        /* 响应式 */
-        @media (max-width: 600px) {
-            .costs { gap: 10px; }
-            .cost-item { padding: 12px 10px; max-width: 90px; }
-            .day { padding: 22px 20px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>武汉+荆州旅行手帐</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root { --primary: #7C9EB2; --secondary: #B8D4E3; --accent: #F4A896; --bg: #F8FBFC; --card: #FFFFFF; --text: #2C3E50; --text-light: #7F8C8D; }
+body { font-family: 'Noto Sans SC', sans-serif; background: linear-gradient(180deg, #E8F4F8 0%, #F8FBFC 100%); min-height: 100vh; padding: 20px; }
+.book { max-width: 520px; margin: 0 auto; background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(124, 158, 178, 0.2); overflow: hidden; }
+.cover { background: linear-gradient(135deg, #7C9EB2 0%, #B8D4E3 50%, #E8F4F8 100%); padding: 50px 30px; text-align: center; }
+.cover h1 { color: white; font-size: 28px; margin-bottom: 8px; }
+.cover .subtitle { color: rgba(255,255,255,0.95); font-size: 14px; letter-spacing: 2px; }
+.cover .date { display: inline-block; background: rgba(255,255,255,0.25); color: white; padding: 10px 24px; border-radius: 25px; margin-top: 25px; font-size: 14px; }
+.cost-section { background: var(--bg); padding: 25px 30px; border-bottom: 1px solid #E8F4F8; }
+.cost-title { text-align: center; color: var(--primary); font-size: 14px; margin-bottom: 20px; font-weight: 500; }
+.costs { display: flex; justify-content: center; gap: 20px; }
+.cost-item { background: white; padding: 15px 20px; border-radius: 16px; text-align: center; box-shadow: 0 4px 12px rgba(124, 158, 178, 0.1); flex: 1; max-width: 110px; }
+.cost-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+.cost-label { color: var(--text-light); font-size: 11px; margin-bottom: 4px; }
+.cost-value { color: var(--text); font-weight: 700; font-size: 15px; }
+.cost-person { color: #BDC3C7; font-size: 10px; margin-top: 2px; }
+.day { padding: 28px 30px; border-bottom: 1px solid #F0F5F8; }
+.day:last-child { border-bottom: none; }
+.day-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.day-badge { background: var(--primary); color: white; padding: 6px 14px; border-radius: 15px; font-weight: 600; font-size: 12px; }
+.day-title { font-size: 18px; color: var(--text); font-weight: 600; }
+.day-theme { font-size: 11px; color: var(--accent); margin-left: auto; font-weight: 500; }
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, var(--primary), var(--secondary)); border-radius: 2px; }
+.event { position: relative; margin-bottom: 16px; }
+.event:last-child { margin-bottom: 0; }
+.event::before { content: ''; position: absolute; left: -24px; top: 6px; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(124, 158, 178, 0.3); }
+.event-time { color: var(--accent); font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.event-content { color: var(--text); font-size: 14px; line-height: 1.5; }
+.event-note { color: #BDC3C7; font-size: 12px; margin-top: 4px; }
+.highlight { background: linear-gradient(135deg, #FEF6F3, #FDF8F6); border-radius: 14px; padding: 16px 18px; margin: 14px 0; }
+.highlight-title { color: var(--accent); font-size: 13px; margin-bottom: 10px; font-weight: 600; }
+.food-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.food-item { background: white; border: 1px solid #F0E8E5; padding: 8px 14px; border-radius: 20px; font-size: 12px; color: var(--text-light); }
+.food-hot { background: var(--accent); border-color: var(--accent); color: white; }
+.footer { background: linear-gradient(135deg, var(--primary), #9BB5C7); padding: 35px 30px; text-align: center; }
+.footer-text { color: white; font-size: 16px; margin-bottom: 8px; font-weight: 500; }
+.made-by { color: rgba(255,255,255,0.7); font-size: 11px; }
+@media (max-width: 600px) { .costs { gap: 10px; } .cost-item { padding: 12px 10px; max-width: 90px; } .day { padding: 22px 20px; } }
+</style>
 </head>
 <body>
-    <div class="book">
-        <!-- 封面 -->
-        <div class="cover">
-            <h1>武汉+荆州 🏃</h1>
-            <p class="subtitle">TRAVEL DIARY</p>
-            <div class="date">2026.3.5 - 3.8</div>
-        </div>
-        
-        <!-- 费用 -->
-        <div class="cost-section">
-            <div class="cost-title">行程花费</div>
-            <div class="costs">
-                <div class="cost-item">
-                    <span class="cost-icon">✈️</span>
-                    <div class="cost-label">机票</div>
-                    <div class="cost-value">¥1462</div>
-                    <div class="cost-person">人均¥731</div>
-                </div>
-                <div class="cost-item">
-                    <span class="cost-icon">🚄</span>
-                    <div class="cost-label">高铁</div>
-                    <div class="cost-value">¥409</div>
-                    <div class="cost-person">人均¥205</div>
-                </div>
-                <div class="cost-item">
-                    <span class="cost-icon">🏠</span>
-                    <div class="cost-label">酒店</div>
-                    <div class="cost-value">¥554</div>
-                    <div class="cost-person">3晚 人均¥277</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Day 1 -->
-        <div class="day">
-            <div class="day-header">
-                <span class="day-badge">Day 1</span>
-                <span class="day-title">3月5日 周四</span>
-                <span class="day-theme">出发日</span>
-            </div>
-            <div class="timeline">
-                <div class="event">
-                    <div class="event-time">20:10 - 22:25</div>
-                    <div class="event-content">✈️ <strong>深圳 ➡️ 武汉</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-content">🏨 宿武汉</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Day 2 -->
-        <div class="day">
-            <div class="day-header">
-                <span class="day-badge">Day 2</span>
-                <span class="day-title">3月6日 周五</span>
-                <span class="day-theme">文化日</span>
-            </div>
-            <div class="timeline">
-                <div class="event">
-                    <div class="event-time">09:00 - 15:30</div>
-                    <div class="event-content">🏛️ <strong>湖北省博物馆</strong></div>
-                    <div class="event-note">越王勾践剑 ⚔️</div>
-                </div>
-                <div class="event">
-                    <div class="event-time">20:19 - 22:02</div>
-                    <div class="event-content">🚄 <strong>武汉站 ➡️ 荆州站</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-content">🏨 宿荆州</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Day 3 -->
-        <div class="day">
-            <div class="day-header">
-                <span class="day-badge">Day 3</span>
-                <span class="day-title">3月7日 周六</span>
-                <span class="day-theme">古城日</span>
-            </div>
-            <div class="timeline">
-                <div class="event">
-                    <div class="event-time">09:00 - 13:00</div>
-                    <div class="event-content">🏛️ <strong>荆州市博物馆</strong> ➡️ 开元观</div>
-                </div>
-                <div class="event">
-                    <div class="event-time">13:00 - 17:00</div>
-                    <div class="event-content">🏰 <strong>荆州古城</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-time">20:00 - 21:38</div>
-                    <div class="event-content">🚄 <strong>荆州站 ➡️ 武汉站</strong></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Day 4 -->
-        <div class="day">
-            <div class="day-header">
-                <span class="day-badge">Day 4</span>
-                <span class="day-title">3月8日 周日</span>
-                <span class="day-theme">樱花日</span>
-            </div>
-            <div class="timeline">
-                <div class="event">
-                    <div class="event-time">08:00 - 09:30</div>
-                    <div class="event-content">🌸 <strong>东湖樱园</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-time">09:30 - 11:30</div>
-                    <div class="event-content">🏯 <strong>黄鹤楼</strong>（外观）</div>
-                </div>
-                <div class="event">
-                    <div class="event-time">11:30 - 15:30</div>
-                    <div class="event-content">🛤️ <strong>昙华林</strong> ➡️ <strong>江汉路</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-time">15:30 - 17:00</div>
-                    <div class="event-content">🌉 <strong>汉口江滩</strong></div>
-                    <div class="event-note">长江夕阳 🌅</div>
-                </div>
-                
-                <div class="highlight">
-                    <div class="highlight-title">🍜 晚餐推荐</div>
-                    <div class="food-list">
-                        <div class="food-item food-hot">夏氏砂锅</div>
-                        <div class="food-item food-hot">湖锦酒楼</div>
-                        <div class="food-item food-hot">小民大排档</div>
-                    </div>
-                </div>
-                
-                <div class="event">
-                    <div class="event-time">18:00 - 19:10</div>
-                    <div class="event-content">🚗 <strong>前往天河机场</strong></div>
-                </div>
-                <div class="event">
-                    <div class="event-time">19:10</div>
-                    <div class="event-content">🛫 <strong>武汉 ➡️ 深圳</strong></div>
-                    <div class="event-note">回家啦～</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 页脚 -->
-        <div class="footer">
-            <div class="footer-text">旅途愉快 ✨</div>
-            <div class="made-by">by 土狗 🐕</div>
-        </div>
-    </div>
+<div class="book">
+<div class="cover">
+<h1>武汉+荆州 🏃</h1>
+<p class="subtitle">TRAVEL DIARY</p>
+<div class="date">2026.3.5 - 3.8</div>
+</div>
+<div class="cost-section">
+<div class="cost-title">行程花费</div>
+<div class="costs">
+<div class="cost-item"><span class="cost-icon">✈️</span><div class="cost-label">机票</div><div class="cost-value">¥1462</div><div class="cost-person">人均¥731</div></div>
+<div class="cost-item"><span class="cost-icon">🚄</span><div class="cost-label">高铁</div><div class="cost-value">¥409</div><div class="cost-person">人均¥205</div></div>
+<div class="cost-item"><span class="cost-icon">🏠</span><div class="cost-label">酒店</div><div class="cost-value">¥554</div><div class="cost-person">3晚 人均¥277</div></div>
+</div>
+</div>
+<div class="day">
+<div class="day-header"><span class="day-badge">Day 1</span><span class="day-title">3月5日 周四</span><span class="day-theme">出发日</span></div>
+<div class="timeline">
+<div class="event"><div class="event-time">20:10 - 22:25</div><div class="event-content">✈️ <strong>深圳 ➡️ 武汉</strong></div></div>
+<div class="event"><div class="event-content">🏨 宿武汉</div></div>
+</div>
+</div>
+<div class="day">
+<div class="day-header"><span class="day-badge">Day 2</span><span class="day-title">3月6日 周五</span><span class="day-theme">文化日</span></div>
+<div class="timeline">
+<div class="event"><div class="event-time">09:00 - 15:30</div><div class="event-content">🏛️ <strong>湖北省博物馆</strong></div><div class="event-note">越王勾践剑 ⚔️</div></div>
+<div class="event"><div class="event-time">15:30 - 17:30</div><div class="event-content">🏯 <strong>黄鹤楼</strong>（外观打卡）</div></div>
+<div class="event"><div class="event-time">20:19 - 22:02</div><div class="event-content">🚄 <strong>武汉站 ➡️ 荆州站</strong></div></div>
+<div class="event"><div class="event-content">🏨 宿荆州</div></div>
+</div>
+</div>
+<div class="day">
+<div class="day-header"><span class="day-badge">Day 3</span><span class="day-title">3月7日 周六</span><span class="day-theme">古城日</span></div>
+<div class="timeline">
+<div class="event"><div class="event-time">09:00 - 13:00</div><div class="event-content">🏛️ <strong>荆州市博物馆</strong> ➡️ 开元观</div></div>
+<div class="event"><div class="event-time">13:00 - 17:00</div><div class="event-content">🏰 <strong>荆州古城</strong></div></div>
+<div class="event"><div class="event-time">20:00 - 21:38</div><div class="event-content">🚄 <strong>荆州站 ➡️ 武汉站</strong></div></div>
+</div>
+</div>
+<div class="day">
+<div class="day-header"><span class="day-badge">Day 4</span><span class="day-title">3月8日 周日</span><span class="day-theme">樱花日</span></div>
+<div class="timeline">
+<div class="event"><div class="event-time">08:00 - 09:30</div><div class="event-content">🌸 <strong>东湖樱园</strong></div></div>
+<div class="event"><div class="event-time">10:00 - 12:00</div><div class="event-content">🛤️ <strong>昙华林</strong></div><div class="event-note">拍照打卡 + 午餐 🍜</div></div>
+<div class="event"><div class="event-time">12:00 - 15:00</div><div class="event-content">🛒 <strong>江汉路</strong> / <strong>武汉天地</strong></div><div class="event-note">逛街购物 ☕</div></div>
+<div class="event"><div class="event-time">15:00 - 17:00</div><div class="event-content">🏛️ <strong>黎黄陂路</strong> / <strong>汉口租界</strong></div><div class="event-note">欧式建筑拍照 📷</div></div>
+<div class="highlight"><div class="highlight-title">🍜 晚餐推荐</div><div class="food-list"><div class="food-item food-hot">夏氏砂锅</div><div class="food-item food-hot">湖锦酒楼</div><div class="food-item food-hot">小民大排档</div></div></div>
+<div class="event"><div class="event-time">18:00 - 19:10</div><div class="event-content">🚗 <strong>前往天河机场</strong></div></div>
+<div class="event"><div class="event-time">19:10</div><div class="event-content">🛫 <strong>武汉 ➡️ 深圳</strong></div><div class="event-note">回家啦～</div></div>
+</div>
+</div>
+<div class="footer"><div class="footer-text">旅途愉快 ✨</div><div class="made-by">by 土狗 🐕</div></div>
+</div>
 </body>
 </html>
