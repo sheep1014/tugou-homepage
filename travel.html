@@ -9,128 +9,111 @@
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
+        :root {
+            --primary: #7C9EB2;
+            --secondary: #B8D4E3;
+            --accent: #F4A896;
+            --bg: #F8FBFC;
+            --card: #FFFFFF;
+            --text: #2C3E50;
+            --text-light: #7F8C8D;
+        }
+        
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background: 
-                linear-gradient(135deg, rgba(255,182,193,0.3) 0%, rgba(255,218,185,0.3) 100%),
-                repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,182,193,0.05) 20px, rgba(255,182,193,0.05) 40px);
+            background: linear-gradient(180deg, #E8F4F8 0%, #F8FBFC 100%);
             min-height: 100vh;
             padding: 20px;
-            background-color: #fff9f5;
         }
         
         .book {
-            max-width: 600px;
+            max-width: 520px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 
-                0 10px 40px rgba(0,0,0,0.1),
-                0 0 0 3px #ffb6c1,
-                0 0 0 6px #fff0f5;
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(124, 158, 178, 0.2);
             overflow: hidden;
-            position: relative;
         }
-        
-        /* 装饰角 */
-        .corner {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 3px solid #ffb6c1;
-            border-radius: 50%;
-        }
-        .corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-        .corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
-        .corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
-        .corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
         
         /* 封面 */
         .cover {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            padding: 40px 30px;
+            background: linear-gradient(135deg, #7C9EB2 0%, #B8D4E3 50%, #E8F4F8 100%);
+            padding: 50px 30px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .cover::before {
-            content: '✈️ 🚄 🏨';
-            position: absolute;
-            font-size: 80px;
-            opacity: 0.1;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
         
         .cover h1 {
             color: white;
-            font-size: 32px;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            position: relative;
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .cover .subtitle {
-            color: rgba(255,255,255,0.9);
-            font-size: 16px;
+            color: rgba(255,255,255,0.95);
+            font-size: 14px;
+            letter-spacing: 2px;
         }
         
         .cover .date {
             display: inline-block;
-            background: white;
-            color: #ff6b8a;
-            padding: 8px 20px;
-            border-radius: 20px;
-            margin-top: 20px;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 25px;
+            margin-top: 25px;
+            font-size: 14px;
             font-weight: 500;
+        }
+        
+        /* 装饰 */
+        .cover .deco {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0.3;
         }
         
         /* 费用卡片 */
         .cost-section {
-            background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
-            padding: 25px;
-            border-top: 2px dashed #b8e4f0;
+            background: var(--bg);
+            padding: 25px 30px;
+            border-bottom: 1px solid #E8F4F8;
         }
         
         .cost-title {
             text-align: center;
-            color: #5d9cec;
-            font-size: 18px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            color: var(--primary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
         
         .costs {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 20px;
         }
         
         .cost-item {
             background: white;
-            padding: 12px 20px;
-            border-radius: 15px;
+            padding: 15px 20px;
+            border-radius: 16px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(93,156,236,0.15);
-            min-width: 100px;
+            box-shadow: 0 4px 12px rgba(124, 158, 178, 0.1);
+            flex: 1;
+            max-width: 110px;
         }
         
-        .cost-icon { font-size: 24px; display: block; margin-bottom: 5px; }
-        .cost-label { color: #666; font-size: 12px; }
-        .cost-value { color: #ff6b8a; font-weight: bold; font-size: 16px; }
-        .cost-person { color: #999; font-size: 11px; }
+        .cost-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+        .cost-label { color: var(--text-light); font-size: 11px; margin-bottom: 4px; }
+        .cost-value { color: var(--text); font-weight: 700; font-size: 15px; }
+        .cost-person { color: #BDC3C7; font-size: 10px; margin-top: 2px; }
         
         /* 每日行程 */
         .day {
-            padding: 25px;
-            border-bottom: 2px dashed #ffe4e1;
-            position: relative;
+            padding: 28px 30px;
+            border-bottom: 1px solid #F0F5F8;
         }
         
         .day:last-child { border-bottom: none; }
@@ -138,172 +121,163 @@
         .day-header {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             margin-bottom: 20px;
         }
         
         .day-badge {
-            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            background: var(--primary);
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 12px;
         }
         
         .day-title {
-            font-size: 20px;
-            color: #333;
+            font-size: 18px;
+            color: var(--text);
+            font-weight: 600;
         }
         
         .day-theme {
-            font-size: 12px;
-            color: #999;
+            font-size: 11px;
+            color: var(--accent);
             margin-left: auto;
+            font-weight: 500;
         }
         
         .timeline {
             position: relative;
-            padding-left: 20px;
+            padding-left: 24px;
         }
         
         .timeline::before {
             content: '';
             position: absolute;
             left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, #ffb6c1, #ff9a9e, #fecfef);
-            border-radius: 3px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
         }
         
         .event {
             position: relative;
-            margin-bottom: 15px;
-            padding-left: 20px;
-        }
-        
-        .event::before {
-            content: '📍';
-            position: absolute;
-            left: -22px;
-            top: 0;
-            font-size: 14px;
+            margin-bottom: 16px;
         }
         
         .event:last-child { margin-bottom: 0; }
         
+        .event::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(124, 158, 178, 0.3);
+        }
+        
         .event-time {
-            color: #ff6b8a;
+            color: var(--accent);
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 3px;
         }
         
         .event-content {
-            color: #333;
+            color: var(--text);
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         
         .event-note {
-            color: #999;
+            color: #BDC3C7;
             font-size: 12px;
-            margin-top: 5px;
-            font-style: italic;
+            margin-top: 4px;
         }
         
         /* 特别内容 */
         .highlight {
-            background: linear-gradient(135deg, #fff5f5, #fff0f5);
-            border: 2px solid #ffb6c1;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
+            background: linear-gradient(135deg, #FEF6F3, #FDF8F6);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin: 14px 0;
         }
         
         .highlight-title {
-            color: #ff6b8a;
-            font-size: 16px;
+            color: var(--accent);
+            font-size: 13px;
             margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-weight: 600;
         }
         
         /* 晚餐推荐 */
         .food-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
         
         .food-item {
             background: white;
-            border: 2px solid #ffe4e1;
-            padding: 10px 15px;
-            border-radius: 12px;
-            font-size: 13px;
+            border: 1px solid #F0E8E5;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-light);
         }
         
         .food-hot {
-            background: #fff0f0;
-            border-color: #ff6b6b;
-            color: #ff6b6b;
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
         }
         
         /* 页脚 */
         .footer {
-            background: linear-gradient(135deg, #fecfef 0%, #ff9a9e 100%);
-            padding: 30px;
+            background: linear-gradient(135deg, var(--primary), #9BB5C7);
+            padding: 35px 30px;
             text-align: center;
-            color: white;
         }
         
         .footer-text {
-            font-size: 18px;
-            margin-bottom: 10px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
         
         .made-by {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-        
-        /* 装饰 */
-        .sticker {
-            position: absolute;
-            font-size: 30px;
-            opacity: 0.8;
+            color: rgba(255,255,255,0.7);
+            font-size: 11px;
         }
         
         /* 响应式 */
         @media (max-width: 600px) {
-            .book { border-radius: 15px; }
-            .cover h1 { font-size: 26px; }
             .costs { gap: 10px; }
-            .cost-item { min-width: 90px; padding: 10px 15px; }
+            .cost-item { padding: 12px 10px; max-width: 90px; }
+            .day { padding: 22px 20px; }
         }
     </style>
 </head>
 <body>
     <div class="book">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-        
         <!-- 封面 -->
         <div class="cover">
-            <h1>武汉+荆州游 🏃‍♂️</h1>
-            <p class="subtitle">一次超棒的旅行 ✨</p>
-            <div class="date">📅 2026.3.5 - 3.8</div>
+            <h1>武汉+荆州 🏃</h1>
+            <p class="subtitle">TRAVEL DIARY</p>
+            <div class="date">2026.3.5 - 3.8</div>
         </div>
         
         <!-- 费用 -->
         <div class="cost-section">
-            <div class="cost-title">💰 费用预算</div>
+            <div class="cost-title">行程花费</div>
             <div class="costs">
                 <div class="cost-item">
                     <span class="cost-icon">✈️</span>
@@ -315,7 +289,7 @@
                     <span class="cost-icon">🚄</span>
                     <div class="cost-label">高铁</div>
                     <div class="cost-value">¥409</div>
-                    <div class="cost-person">人均¥204.5</div>
+                    <div class="cost-person">人均¥205</div>
                 </div>
                 <div class="cost-item">
                     <span class="cost-icon">🏠</span>
@@ -331,13 +305,12 @@
             <div class="day-header">
                 <span class="day-badge">Day 1</span>
                 <span class="day-title">3月5日 周四</span>
-                <span class="day-theme">🌙 出发日</span>
+                <span class="day-theme">出发日</span>
             </div>
             <div class="timeline">
                 <div class="event">
                     <div class="event-time">20:10 - 22:25</div>
                     <div class="event-content">✈️ <strong>深圳 ➡️ 武汉</strong></div>
-                    <div class="event-note">出发啦！🎉</div>
                 </div>
                 <div class="event">
                     <div class="event-content">🏨 宿武汉</div>
@@ -350,13 +323,13 @@
             <div class="day-header">
                 <span class="day-badge">Day 2</span>
                 <span class="day-title">3月6日 周五</span>
-                <span class="day-theme">🏛️ 文化日</span>
+                <span class="day-theme">文化日</span>
             </div>
             <div class="timeline">
                 <div class="event">
                     <div class="event-time">09:00 - 15:30</div>
                     <div class="event-content">🏛️ <strong>湖北省博物馆</strong></div>
-                    <div class="event-note">看看越王勾践剑！⚔️</div>
+                    <div class="event-note">越王勾践剑 ⚔️</div>
                 </div>
                 <div class="event">
                     <div class="event-time">20:19 - 22:02</div>
@@ -373,7 +346,7 @@
             <div class="day-header">
                 <span class="day-badge">Day 3</span>
                 <span class="day-title">3月7日 周六</span>
-                <span class="day-theme">🏰 古城日</span>
+                <span class="day-theme">古城日</span>
             </div>
             <div class="timeline">
                 <div class="event">
@@ -383,7 +356,6 @@
                 <div class="event">
                     <div class="event-time">13:00 - 17:00</div>
                     <div class="event-content">🏰 <strong>荆州古城</strong></div>
-                    <div class="event-note">感受三国历史文化～</div>
                 </div>
                 <div class="event">
                     <div class="event-time">20:00 - 21:38</div>
@@ -397,37 +369,34 @@
             <div class="day-header">
                 <span class="day-badge">Day 4</span>
                 <span class="day-title">3月8日 周日</span>
-                <span class="day-theme">🌸 樱花日</span>
+                <span class="day-theme">樱花日</span>
             </div>
             <div class="timeline">
                 <div class="event">
                     <div class="event-time">08:00 - 09:30</div>
                     <div class="event-content">🌸 <strong>东湖樱园</strong></div>
-                    <div class="event-note">看樱花！超浪漫～</div>
                 </div>
                 <div class="event">
                     <div class="event-time">09:30 - 11:30</div>
-                    <div class="event-content">🏯 <strong>黄鹤楼</strong>（外观打卡）</div>
+                    <div class="event-content">🏯 <strong>黄鹤楼</strong>（外观）</div>
                 </div>
                 <div class="event">
                     <div class="event-time">11:30 - 15:30</div>
                     <div class="event-content">🛤️ <strong>昙华林</strong> ➡️ <strong>江汉路</strong></div>
-                    <div class="event-note">拍照打卡 + 午餐 🍜</div>
                 </div>
                 <div class="event">
                     <div class="event-time">15:30 - 17:00</div>
                     <div class="event-content">🌉 <strong>汉口江滩</strong></div>
-                    <div class="event-note">长江边看夕阳！🌅</div>
+                    <div class="event-note">长江夕阳 🌅</div>
                 </div>
                 
                 <div class="highlight">
                     <div class="highlight-title">🍜 晚餐推荐</div>
                     <div class="food-list">
-                        <div class="food-item food-hot">🔥 夏氏砂锅</div>
-                        <div class="food-item food-hot">🔥 湖锦酒楼</div>
-                        <div class="food-item food-hot">🔥 小民大排档</div>
+                        <div class="food-item food-hot">夏氏砂锅</div>
+                        <div class="food-item food-hot">湖锦酒楼</div>
+                        <div class="food-item food-hot">小民大排档</div>
                     </div>
-                    <div class="event-note" style="margin-top:10px;">📱 湖锦提前2小时订位，夏氏砂锅大众点评取号</div>
                 </div>
                 
                 <div class="event">
@@ -437,15 +406,15 @@
                 <div class="event">
                     <div class="event-time">19:10</div>
                     <div class="event-content">🛫 <strong>武汉 ➡️ 深圳</strong></div>
-                    <div class="event-note">回家啦～下次还来！💕</div>
+                    <div class="event-note">回家啦～</div>
                 </div>
             </div>
         </div>
         
         <!-- 页脚 -->
         <div class="footer">
-            <div class="footer-text">🎉 旅途愉快！</div>
-            <div class="made-by">Made with 💜 by 土狗 🐕</div>
+            <div class="footer-text">旅途愉快 ✨</div>
+            <div class="made-by">by 土狗 🐕</div>
         </div>
     </div>
 </body>
