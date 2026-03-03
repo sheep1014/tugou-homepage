@@ -219,6 +219,45 @@
       color: #c8b8d0;
       letter-spacing: 3px;
     }
+
+    /* Love letter */
+    .love-letter {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 2;
+      color: #8b7b8b;
+      opacity: 0;
+    }
+
+    .love-letter.show {
+      opacity: 1;
+    }
+
+    .love-letter p {
+      margin: 0;
+      white-space: pre-line;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 18px;
+      background: #ff9a9e;
+      margin-left: 2px;
+      animation: blink 0.7s infinite;
+      vertical-align: text-bottom;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -293,6 +332,9 @@
     <div class="title">我的小龟，七周年快乐</div>
     <div class="date">2019.3.3 — 2026.3.3</div>
     <div class="years">SEVEN YEARS</div>
+    <div class="love-letter" id="loveLetter">
+      <p id="letterText"></p><span class="cursor"></span>
+    </div>
   </div>
 
   <script>
@@ -320,6 +362,36 @@
     setTimeout(() => {
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('content').classList.add('show');
+      
+      // Typewriter effect
+      const text = `七载光阴，不负良辰。
+我们走过斑驳的红墙黛瓦，记录过山河远阔，也在烟火日常里，拥有了两只猫的温柔。
+所谓岁月静好，不过是：看过世间古迹，身边始终是你，脚边永远有猫。`;
+      
+      const letterElement = document.getElementById('loveLetter');
+      const textElement = document.getElementById('letterText');
+      let index = 0;
+      let line = 0;
+      const lines = text.split('\n');
+      
+      letterElement.classList.add('show');
+      
+      function typeWriter() {
+        if (line < lines.length) {
+          if (index < lines[line].length) {
+            textElement.textContent += lines[line][index];
+            index++;
+            setTimeout(typeWriter, 80 + Math.random() * 50);
+          } else {
+            line++;
+            index = 0;
+            textElement.textContent += '\n';
+            setTimeout(typeWriter, 300);
+          }
+        }
+      }
+      
+      setTimeout(typeWriter, 500);
     }, 3000);
   </script>
 </body>
