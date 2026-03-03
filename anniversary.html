@@ -17,8 +17,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #0a0a0a;
-      background: radial-gradient(ellipse at center, #1a1012 0%, #0a0a0a 70%);
+      background: #080808;
+      background: radial-gradient(ellipse at 50% 30%, #151010 0%, #080808 50%, #030303 100%);
       overflow: hidden;
       font-family: 'Times New Roman', serif;
     }
@@ -26,24 +26,23 @@
     #canvas-container {
       position: relative;
       width: 100%;
-      height: 70vh;
+      height: 72vh;
       cursor: pointer;
     }
 
     .hint {
       position: absolute;
-      top: 50%;
+      top: 52%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #3a3a3a;
-      font-size: 10px;
-      letter-spacing: 3px;
+      color: #2a2a2a;
+      font-size: 9px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       opacity: 0;
-      transition: opacity 0.8s ease;
+      transition: opacity 1s ease;
       pointer-events: none;
       font-family: 'Courier New', monospace;
-      z-index: 10;
     }
 
     #canvas-container:hover .hint {
@@ -52,19 +51,19 @@
 
     .date {
       position: absolute;
-      bottom: 18%;
-      font-size: 15px;
+      bottom: 16%;
+      font-size: 14px;
       font-weight: 300;
-      color: #6a5a4a;
-      letter-spacing: 5px;
+      color: #5a4a3a;
+      letter-spacing: 6px;
     }
 
     .years {
       position: absolute;
-      bottom: 12%;
-      font-size: 10px;
-      color: #4a4a4a;
-      letter-spacing: 3px;
+      bottom: 10%;
+      font-size: 9px;
+      color: #3a3a3a;
+      letter-spacing: 4px;
     }
   </style>
 </head>
@@ -80,246 +79,295 @@
     // Scene setup
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 4;
+    const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.01, 1000);
+    camera.position.z = 3.5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x202020, 0.8);
+    // Subtle lighting
+    const ambientLight = new THREE.AmbientLight(0x151010, 1.5);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xc41e3a, 2, 100);
-    pointLight.position.set(2, 2, 3);
-    scene.add(pointLight);
+    const spotLight = new THREE.SpotLight(0xff2030, 3, 20, Math.PI / 4, 0.5);
+    spotLight.position.set(0, 3, 4);
+    spotLight.target.position.set(0, 0, 0);
+    scene.add(spotLight);
+    scene.add(spotLight.target);
 
-    const pointLight2 = new THREE.PointLight(0x4a050f, 1, 50);
-    pointLight2.position.set(-2, -1, 2);
-    scene.add(pointLight2);
+    const fillLight = new THREE.PointLight(0x300808, 1.5, 15);
+    fillLight.position.set(-3, 0, 2);
+    scene.add(fillLight);
 
-    // Particle rose
-    let particleRose, particleStem, particles = [];
+    // Rose particle system
+    let roseParticles;
+    let particleData = [];
     let blooming = false;
-    let bloomProgress = 0;
-    const targetBloom = { value: 0 };
+    let bloomTarget = 0;
+    let bloomCurrent = 0;
 
-    // Generate rose points using parametric equations
-    function generateRosePoints() {
+    // Generate elegant rose shape
+    function generateRose() {
       const points = [];
       
-      // Rose petals - using parametric surface
-      for (let i = 0; i < 2000; i++) {
+      // === FLOWER HEAD (多层花瓣) ===
+      
+      // 花心 - 紧密的螺旋
+      for (let i = 0; i < 200; i++) {
+        const t = i / 200;
+        const angle = t * Math.PI * 8;
+        const r = t * 0.12;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const y = t * 0.08;
+        
+        points.push({
+          x: x, y: y + 0.35, z: z,
+          ox: x, oy: y + 0.35, oz: z,
+          layer: 'heart',
+          size: 0.012 + Math.random() * 0.008
+        });
+      }
+
+      // 内层花瓣
+      for (let i = 0; i < 600; i++) {
         const u = Math.random() * Math.PI * 2;
         const v = Math.random();
         
-        // Rose shape
-        const r = 0.5 * (1 - v) * (1 + 0.3 * Math.sin(5 * u));
-        const x = r * Math.cos(u) * (1 + 0.2 * Math.cos(3 * u));
-        const y = v * 1.2 - 0.3;
-        const z = r * Math.sin(u) * (1 + 0.2 * Math.cos(3 * u));
+        // 花瓣形状 - 更紧密的玫瑰花瓣
+        const petalR = 0.15 * Math.pow(1 - v * 0.7, 1.5);
+        const petalY = 0.35 + v * 0.35;
         
-        // Add some randomness
-        const spread = 0.02;
+        // 添加波浪纹理
+        const wave = Math.sin(u * 5) * 0.02;
+        
+        const x = petalR * Math.cos(u) * (1 + wave);
+        const z = petalR * Math.sin(u) * (1 + wave);
+        
         points.push({
-          x: x + (Math.random() - 0.5) * spread,
-          y: y + (Math.random() - 0.5) * spread,
-          z: z + (Math.random() - 0.5) * spread,
-          baseY: y,
-          baseX: x,
-          baseZ: z,
-          layer: 'petal'
+          x: x, y: petalY, z: z,
+          ox: x, oy: petalY, oz: z,
+          layer: 'inner',
+          size: 0.015 + Math.random() * 0.01
         });
       }
 
-      // Inner center
+      // 外层花瓣 - 更大的展开
+      for (let i = 0; i < 900; i++) {
+        const u = Math.random() * Math.PI * 2;
+        const v = Math.random();
+        
+        const petalR = 0.2 + v * 0.25;
+        const petalY = 0.3 + v * 0.3;
+        
+        const wave = Math.sin(u * 4 + v * 2) * 0.025;
+        
+        const x = petalR * Math.cos(u) * (1 + wave);
+        const z = petalR * Math.sin(u) * (1 + wave);
+        
+        points.push({
+          x: x, y: petalY, z: z,
+          ox: x, oy: petalY, oz: z,
+          layer: 'outer',
+          size: 0.018 + Math.random() * 0.012
+        });
+      }
+
+      // 最外层花瓣 - 轻微外翻
+      for (let i = 0; i < 500; i++) {
+        const u = Math.random() * Math.PI * 2;
+        const v = Math.random();
+        
+        const petalR = 0.35 + v * 0.2;
+        const petalY = 0.25 + v * 0.25;
+        const curl = v * 0.1;
+        
+        const wave = Math.sin(u * 3) * 0.03;
+        
+        const x = petalR * Math.cos(u) * (1 + wave) + curl * Math.cos(u);
+        const z = petalR * Math.sin(u) * (1 + wave) + curl * Math.sin(u);
+        
+        points.push({
+          x: x, y: petalY, z: z,
+          ox: x, oy: petalY, oz: z,
+          layer: 'outermost',
+          size: 0.02 + Math.random() * 0.015
+        });
+      }
+
+      // === STEM (茎) ===
       for (let i = 0; i < 300; i++) {
+        const t = Math.random();
+        const y = -t * 1.8;
         const angle = Math.random() * Math.PI * 2;
-        const r = Math.random() * 0.15;
-        const y = Math.random() * 0.3;
-        points.push({
-          x: Math.cos(angle) * r,
-          y: y - 0.2,
-          z: Math.sin(angle) * r,
-          baseX: Math.cos(angle) * r,
-          baseY: y - 0.2,
-          baseZ: Math.sin(angle) * r,
-          layer: 'center'
-        });
-      }
-
-      // Stem
-      for (let i = 0; i < 400; i++) {
-        const y = -0.3 - Math.random() * 2;
-        const angle = Math.random() * Math.PI * 2;
-        const r = 0.03 + Math.random() * 0.02;
+        const r = 0.02 + Math.sin(t * 10) * 0.01;
+        
         points.push({
           x: Math.cos(angle) * r,
           y: y,
           z: Math.sin(angle) * r,
-          baseX: Math.cos(angle) * r,
-          baseY: y,
-          baseZ: Math.sin(angle) * r,
-          layer: 'stem'
+          ox: Math.cos(angle) * r,
+          oy: y,
+          oz: Math.sin(angle) * r,
+          layer: 'stem',
+          size: 0.01 + Math.random() * 0.008
         });
       }
 
-      // Leaves
-      for (let side = -1; side <= 1; side += 2) {
-        for (let i = 0; i < 80; i++) {
+      // === LEAVES (叶子) ===
+      const leafPositions = [
+        { y: -0.4, side: 1, angle: 0.3 },
+        { y: -0.7, side: -1, angle: -0.4 },
+        { y: -1.0, side: 1, angle: 0.2 }
+      ];
+
+      leafPositions.forEach(lp => {
+        for (let i = 0; i < 120; i++) {
           const t = Math.random();
-          const x = side * (0.15 + t * 0.4);
-          const y = -0.5 - t * 0.8;
-          const z = Math.sin(t * Math.PI) * 0.08;
+          const x = lp.side * (t * 0.5);
+          const y = lp.y - t * 0.3;
+          const z = Math.sin(t * Math.PI) * 0.08 * (1 - t * 0.5);
+          
+          const wobble = (Math.random() - 0.5) * 0.02;
+          
           points.push({
-            x: x + (Math.random() - 0.5) * 0.03,
-            y: y + (Math.random() - 0.5) * 0.03,
-            z: z + (Math.random() - 0.5) * 0.02,
-            baseX: x,
-            baseY: y,
-            baseZ: z,
-            layer: 'leaf'
+            x: x + wobble,
+            y: y,
+            z: z + wobble,
+            ox: x + wobble,
+            oy: y,
+            oz: z + wobble,
+            layer: 'leaf',
+            size: 0.015 + Math.random() * 0.01
           });
         }
-      }
+      });
 
       return points;
     }
 
     // Create particle system
-    function createParticleRose() {
-      const rosePoints = generateRosePoints();
+    function createRose() {
+      particleData = generateRose();
       
       const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(rosePoints.length * 3);
-      const colors = new Float32Array(rosePoints.length * 3);
-      const sizes = new Float32Array(rosePoints.length);
+      const positions = new Float32Array(particleData.length * 3);
+      const colors = new Float32Array(particleData.length * 3);
+      const sizes = new Float32Array(particleData.length);
 
-      rosePoints.forEach((point, i) => {
-        positions[i * 3] = point.x;
-        positions[i * 3 + 1] = point.y;
-        positions[i * 3 + 2] = point.z;
+      particleData.forEach((p, i) => {
+        positions[i * 3] = p.x;
+        positions[i * 3 + 1] = p.y;
+        positions[i * 3 + 2] = p.z;
 
-        // Colors based on layer
-        if (point.layer === 'petal') {
-          const shade = 0.6 + Math.random() * 0.4;
-          colors[i * 3] = 0.55 * shade;
-          colors[i * 3 + 1] = 0.08 * shade;
-          colors[i * 3 + 2] = 0.12 * shade;
-        } else if (point.layer === 'center') {
-          colors[i * 3] = 0.3 + Math.random() * 0.2;
-          colors[i * 3 + 1] = 0.03;
-          colors[i * 3 + 2] = 0.06;
-        } else if (point.layer === 'stem') {
-          colors[i * 3] = 0.1;
-          colors[i * 3 + 1] = 0.3;
-          colors[i * 3 + 2] = 0.1;
+        // 精细的颜色渐变
+        if (p.layer === 'heart') {
+          // 花心 - 深红色到暗红色
+          const v = 0.3 + Math.random() * 0.3;
+          colors[i * 3] = 0.35 * v;
+          colors[i * 3 + 1] = 0.02 * v;
+          colors[i * 3 + 2] = 0.05 * v;
+        } else if (p.layer === 'inner') {
+          // 内层 - 正红到深红
+          const v = 0.5 + Math.random() * 0.4;
+          colors[i * 3] = 0.7 * v;
+          colors[i * 3 + 1] = 0.05 * v;
+          colors[i * 3 + 2] = 0.1 * v;
+        } else if (p.layer === 'outer') {
+          // 外层 - 玫瑰红到酒红
+          const v = 0.55 + Math.random() * 0.35;
+          colors[i * 3] = 0.55 * v;
+          colors[i * 3 + 1] = 0.04 * v;
+          colors[i * 3 + 2] = 0.08 * v;
+        } else if (p.layer === 'outermost') {
+          // 最外层 - 偏暗
+          const v = 0.45 + Math.random() * 0.3;
+          colors[i * 3] = 0.45 * v;
+          colors[i * 3 + 1] = 0.03 * v;
+          colors[i * 3 + 2] = 0.06 * v;
+        } else if (p.layer === 'stem') {
+          // 茎 - 深绿
+          colors[i * 3] = 0.08;
+          colors[i * 3 + 1] = 0.22;
+          colors[i * 3 + 2] = 0.08;
         } else {
-          colors[i * 3] = 0.1;
-          colors[i * 3 + 1] = 0.25;
-          colors[i * 3 + 2] = 0.1;
+          // 叶子 - 绿色
+          colors[i * 3] = 0.08;
+          colors[i * 3 + 1] = 0.28;
+          colors[i * 3 + 2] = 0.08;
         }
 
-        sizes[i] = point.layer === 'stem' ? 0.015 : 0.02 + Math.random() * 0.015;
-        
-        point.originalX = point.x;
-        point.originalY = point.y;
-        point.originalZ = point.z;
+        sizes[i] = p.size;
       });
 
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-      // Store original positions
-      geometry.userData = { originalPositions: positions.slice(), points: rosePoints };
-
       const material = new THREE.PointsMaterial({
         size: 0.02,
         vertexColors: true,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.95,
         sizeAttenuation: true,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
       });
 
-      particleRose = new THREE.Points(geometry, material);
-      scene.add(particleRose);
+      roseParticles = new THREE.Points(geometry, material);
+      scene.add(roseParticles);
     }
 
-    createParticleRose();
+    createRose();
 
-    // Rotation
-    let rotation = { x: 0, y: 0 };
-    let targetRotation = { x: 0, y: 0 };
+    // Interaction
+    let rotation = { x: -0.2, y: 0 };
+    let targetRotation = { x: -0.2, y: 0 };
     let isDragging = false;
-    let previousMouse = { x: 0, y: 0 };
+    let lastPos = { x: 0, y: 0 };
     let autoRotate = true;
-    let autoRotateTimeout;
+    let autoTimer;
 
-    container.addEventListener('mousedown', (e) => {
+    function onStart(x, y) {
       isDragging = true;
       autoRotate = false;
-      clearTimeout(autoRotateTimeout);
-      previousMouse = { x: e.clientX, y: e.clientY };
-    });
+      clearTimeout(autoTimer);
+      lastPos = { x, y };
+    }
 
-    container.addEventListener('mouseup', () => {
-      isDragging = false;
-      autoRotateTimeout = setTimeout(() => { autoRotate = true; }, 3000);
-    });
-
-    container.addEventListener('mousemove', (e) => {
+    function onMove(x, y) {
       if (isDragging) {
-        const deltaX = e.clientX - previousMouse.x;
-        const deltaY = e.clientY - previousMouse.y;
-        targetRotation.y += deltaX * 0.005;
-        targetRotation.x += deltaY * 0.005;
-        targetRotation.x = Math.max(-0.5, Math.min(0.5, targetRotation.x));
-        previousMouse = { x: e.clientX, y: e.clientY };
+        targetRotation.y += (x - lastPos.x) * 0.006;
+        targetRotation.x += (y - lastPos.y) * 0.004;
+        targetRotation.x = Math.max(-0.8, Math.min(0.4, targetRotation.x));
+        lastPos = { x, y };
       }
-    });
+    }
 
-    // Touch
-    container.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      autoRotate = false;
-      clearTimeout(autoRotateTimeout);
-      previousMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    });
-
-    container.addEventListener('touchend', () => {
+    function onEnd() {
       isDragging = false;
-      autoRotateTimeout = setTimeout(() => { autoRotate = true; }, 3000);
-    });
+      autoTimer = setTimeout(() => { autoRotate = true; }, 4000);
+    }
 
-    container.addEventListener('touchmove', (e) => {
-      if (isDragging) {
-        const deltaX = e.touches[0].clientX - previousMouse.x;
-        const deltaY = e.touches[0].clientY - previousMouse.y;
-        targetRotation.y += deltaX * 0.005;
-        targetRotation.x += deltaY * 0.005;
-        targetRotation.x = Math.max(-0.5, Math.min(0.5, targetRotation.x));
-        previousMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      }
-    });
+    container.addEventListener('mousedown', e => onStart(e.clientX, e.clientY));
+    container.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+    container.addEventListener('mouseup', onEnd);
+    container.addEventListener('mouseleave', onEnd);
 
-    // Click to bloom
-    let clickStart = { x: 0, y: 0 };
-    container.addEventListener('mousedown', (e) => {
-      clickStart = { x: e.clientX, y: e.clientY };
-    });
+    container.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY));
+    container.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
+    container.addEventListener('touchend', onEnd);
 
-    container.addEventListener('click', (e) => {
-      const dist = Math.sqrt(
-        Math.pow(e.clientX - clickStart.x, 2) + 
-        Math.pow(e.clientY - clickStart.y, 2)
-      );
+    // Click detection
+    let clickPos = { x: 0, y: 0 };
+    container.addEventListener('mousedown', e => clickPos = { x: e.clientX, y: e.clientY });
+    container.addEventListener('click', e => {
+      const dist = Math.hypot(e.clientX - clickPos.x, e.clientY - clickPos.y);
       if (dist < 5) {
         blooming = !blooming;
-        targetBloom.value = blooming ? 1 : 0;
+        bloomTarget = blooming ? 1 : 0;
       }
     });
 
@@ -328,40 +376,40 @@
       requestAnimationFrame(animate);
 
       // Auto rotation
-      if (autoRotate) {
-        targetRotation.y += 0.003;
-      }
+      if (autoRotate) targetRotation.y += 0.004;
 
       // Smooth rotation
-      rotation.x += (targetRotation.x - rotation.x) * 0.05;
-      rotation.y += (targetRotation.y - rotation.y) * 0.05;
-      particleRose.rotation.x = rotation.x;
-      particleRose.rotation.y = rotation.y;
+      rotation.x += (targetRotation.x - rotation.x) * 0.06;
+      rotation.y += (targetRotation.y - rotation.y) * 0.06;
+      roseParticles.rotation.x = rotation.x;
+      roseParticles.rotation.y = rotation.y;
 
       // Bloom animation
-      bloomProgress += (targetBloom.value - bloomProgress) * 0.03;
+      bloomCurrent += (bloomTarget - bloomCurrent) * 0.025;
 
-      const positions = particleRose.geometry.attributes.position.array;
-      const points = particleRose.geometry.userData.points;
-
-      points.forEach((point, i) => {
-        if (point.layer === 'petal' || point.layer === 'center') {
-          const expand = bloomProgress * 0.15;
-          positions[i * 3] = point.originalX * (1 + expand);
-          positions[i * 3 + 1] = point.originalY + bloomProgress * 0.1;
-          positions[i * 3 + 2] = point.originalZ * (1 + expand);
+      const positions = roseParticles.geometry.attributes.position.array;
+      
+      particleData.forEach((p, i) => {
+        if (bloomCurrent > 0.001) {
+          if (p.layer === 'heart' || p.layer === 'inner' || p.layer === 'outer' || p.layer === 'outermost') {
+            const expand = bloomCurrent * 0.25;
+            const float = bloomCurrent * 0.15;
+            positions[i * 3] = p.ox * (1 + expand);
+            positions[i * 3 + 1] = p.oy + float + bloomCurrent * Math.sin(i) * 0.02;
+            positions[i * 3 + 2] = p.oz * (1 + expand);
+          }
+        } else {
+          positions[i * 3] = p.ox;
+          positions[i * 3 + 1] = p.oy;
+          positions[i * 3 + 2] = p.oz;
         }
       });
 
-      particleRose.geometry.attributes.position.needsUpdate = true;
+      roseParticles.geometry.attributes.position.needsUpdate = true;
 
-      // Glow effect when blooming
-      if (bloomProgress > 0.1) {
-        const glow = 0.5 + Math.sin(Date.now() * 0.003) * 0.3;
-        pointLight.intensity = 2 + bloomProgress * glow;
-      } else {
-        pointLight.intensity = 2;
-      }
+      // Pulsing glow
+      const pulse = Math.sin(Date.now() * 0.002) * 0.3 + 0.7;
+      spotLight.intensity = 3 + bloomCurrent * pulse * 2;
 
       renderer.render(scene, camera);
     }
