@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>七周年</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -21,171 +20,90 @@
       background: #0a0a0a;
       background: radial-gradient(ellipse at center, #1a1012 0%, #0a0a0a 70%);
       overflow: hidden;
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Cormorant Garamond', 'Times New Roman', serif;
     }
 
-    .rose-container {
+    .rose-wrapper {
       position: relative;
-      width: 300px;
-      height: 400px;
+      width: 280px;
+      height: 320px;
       cursor: pointer;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .rose-container:hover {
-      transform: scale(1.05);
+    .rose-wrapper:hover {
+      transform: scale(1.08);
     }
 
-    .rose {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 180px;
-      height: 240px;
+    .rose-wrapper.bloom {
+      transform: scale(1.1);
     }
 
-    .rose .stem {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 120px;
-      background: linear-gradient(to top, #1a3d1a, #2d5a2d);
-      border-radius: 2px;
+    .rose-svg {
+      width: 100%;
+      height: 100%;
     }
 
-    .rose .leaf {
-      position: absolute;
-      width: 30px;
-      height: 15px;
-      background: #1d4d1d;
-      border-radius: 0 50% 0 50%;
+    .petal {
+      transform-origin: 140px 180px;
+      transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
     }
 
-    .rose .leaf.left {
-      left: -25px;
-      bottom: 40px;
-      transform: rotate(-30deg);
+    .rose-wrapper.bloom .petal {
+      transform: scale(1.15);
     }
 
-    .rose .leaf.right {
-      right: -25px;
-      bottom: 60px;
-      transform: rotate(30deg) scaleX(-1);
-    }
+    .rose-wrapper.bloom .petal-1 { transform: rotate(-25deg) scale(1.2); }
+    .rose-wrapper.bloom .petal-2 { transform: rotate(-10deg) scale(1.2); }
+    .rose-wrapper.bloom .petal-3 { transform: rotate(5deg) scale(1.2); }
+    .rose-wrapper.bloom .petal-4 { transform: rotate(20deg) scale(1.2); }
+    .rose-wrapper.bloom .petal-5 { transform: rotate(-35deg) scale(1.2); }
+    .rose-wrapper.bloom .petal-6 { transform: rotate(30deg) scale(1.2); }
 
-    .rose .flower {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 120px;
-    }
-
-    .rose .petal {
-      position: absolute;
-      width: 60px;
-      height: 80px;
-      background: linear-gradient(135deg, #8b1538 0%, #5c0d25 50%, #3d0a18 100%);
-      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-      transform-origin: center bottom;
-      transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: inset -5px -5px 15px rgba(0,0,0,0.4), 0 0 20px rgba(139, 21, 56, 0.3);
-    }
-
-    .rose .petal:nth-child(1) {
-      left: 30px;
-      top: 20px;
-      transform: rotate(-30deg);
-    }
-
-    .rose .petal:nth-child(2) {
-      left: 60px;
-      top: 0;
-      transform: rotate(0deg);
-    }
-
-    .rose .petal:nth-child(3) {
-      left: 60px;
-      top: 40px;
-      transform: rotate(90deg);
-    }
-
-    .rose .petal:nth-child(4) {
-      left: 30px;
-      top: 60px;
-      transform: rotate(180deg);
-    }
-
-    .rose .petal:nth-child(5) {
-      left: 0;
-      top: 40px;
-      transform: rotate(-90deg);
-    }
-
-    .rose .center {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
-      background: radial-gradient(circle, #2a0a15 0%, #5c1a2a 100%);
-      border-radius: 50%;
-      box-shadow: 0 0 15px rgba(139, 21, 56, 0.5);
-    }
-
-    .rose-container.bloom .petal:nth-child(1) { transform: rotate(-45deg) scale(1.1); }
-    .rose-container.bloom .petal:nth-child(2) { transform: rotate(-15deg) scale(1.1); }
-    .rose-container.bloom .petal:nth-child(3) { transform: rotate(15deg) scale(1.1); }
-    .rose-container.bloom .petal:nth-child(4) { transform: rotate(45deg) scale(1.1); }
-    .rose-container.bloom .petal:nth-child(5) { transform: rotate(-75deg) scale(1.1); }
-
-    .rose-container.bloom .flower {
+    .rose-wrapper.bloom .rose-glow {
       animation: glow 2s ease-in-out infinite alternate;
     }
 
     @keyframes glow {
-      from { filter: drop-shadow(0 0 10px rgba(139, 21, 56, 0.3)); }
-      to { filter: drop-shadow(0 0 25px rgba(139, 21, 56, 0.6)); }
+      from { filter: drop-shadow(0 0 15px rgba(180, 30, 60, 0.4)); }
+      to { filter: drop-shadow(0 0 35px rgba(180, 30, 60, 0.7)); }
     }
 
     .hint {
       position: absolute;
-      bottom: 120px;
-      color: #555;
-      font-size: 12px;
-      letter-spacing: 2px;
+      bottom: 100px;
+      color: #3a3a3a;
+      font-size: 11px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.8s ease;
+      font-family: 'Courier New', monospace;
     }
 
-    .rose-container:hover + .hint,
-    .rose-container.bloom ~ .hint {
+    .rose-wrapper:hover .hint,
+    .rose-wrapper.bloom .hint {
       opacity: 1;
     }
 
     .date {
       position: absolute;
-      bottom: 60px;
-      font-family: 'Playfair Display', serif;
-      font-size: 28px;
-      font-weight: 400;
-      color: #8a7a6a;
-      letter-spacing: 8px;
+      bottom: 50px;
+      font-size: 18px;
+      font-weight: 300;
+      color: #6a5a4a;
+      letter-spacing: 6px;
+      font-family: 'Times New Roman', serif;
     }
 
     .years {
       position: absolute;
       bottom: 25px;
-      font-family: 'Playfair Display', serif;
-      font-size: 14px;
+      font-size: 11px;
       color: #4a4a4a;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
+      font-family: 'Times New Roman', serif;
     }
 
     .particles {
@@ -200,24 +118,20 @@
 
     .particle {
       position: absolute;
-      width: 2px;
-      height: 2px;
-      background: rgba(139, 21, 56, 0.3);
+      width: 3px;
+      height: 3px;
+      background: rgba(160, 40, 70, 0.4);
       border-radius: 50%;
-      animation: float 15s infinite;
+      animation: float 18s infinite;
     }
 
     @keyframes float {
-      0%, 100% {
+      0% {
         transform: translateY(100vh) rotate(0deg);
         opacity: 0;
       }
-      10% {
-        opacity: 1;
-      }
-      90% {
-        opacity: 1;
-      }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
       100% {
         transform: translateY(-100px) rotate(720deg);
         opacity: 0;
@@ -228,23 +142,57 @@
 <body>
   <div class="particles" id="particles"></div>
   
-  <div class="rose-container" id="rose">
-    <div class="rose">
-      <div class="stem"></div>
-      <div class="leaf left"></div>
-      <div class="leaf right"></div>
-      <div class="flower">
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="center"></div>
-      </div>
-    </div>
+  <div class="rose-wrapper" id="rose">
+    <svg class="rose-svg" viewBox="0 0 280 320">
+      <defs>
+        <radialGradient id="roseGrad" cx="50%" cy="30%" r="70%">
+          <stop offset="0%" style="stop-color:#c41e3a"/>
+          <stop offset="50%" style="stop-color:#8b0a1a"/>
+          <stop offset="100%" style="stop-color:#4a050f"/>
+        </radialGradient>
+        <radialGradient id="petalGrad" cx="50%" cy="30%" r="80%">
+          <stop offset="0%" style="stop-color:#a01830"/>
+          <stop offset="100%" style="stop-color:#5c0a1a"/>
+        </radialGradient>
+      </defs>
+      
+      <!-- Stem -->
+      <path d="M138 180 Q140 240 138 300" stroke="#1d3d1d" stroke-width="4" fill="none" stroke-linecap="round"/>
+      
+      <!-- Leaves -->
+      <ellipse cx="115" cy="250" rx="20" ry="8" fill="#1d4d1d" transform="rotate(-30 115 250)"/>
+      <ellipse cx="165" cy="265" rx="20" ry="8" fill="#1d4d1d" transform="rotate(30 165 265)"/>
+      
+      <!-- Outer petals -->
+      <g class="petal petal-1">
+        <path d="M140 180 Q100 140 120 100 Q160 80 180 120 Q170 160 140 180" fill="url(#petalGrad)"/>
+      </g>
+      <g class="petal petal-2">
+        <path d="M140 180 Q90 160 100 110 Q150 90 180 130 Q170 170 140 180" fill="url(#petalGrad)"/>
+      </g>
+      <g class="petal petal-3">
+        <path d="M140 180 Q100 180 110 130 Q160 120 180 150 Q170 180 140 180" fill="url(#petalGrad)"/>
+      </g>
+      <g class="petal petal-4">
+        <path d="M140 180 Q130 170 150 120 Q190 130 180 170 Q160 185 140 180" fill="url(#petalGrad)"/>
+      </g>
+      <g class="petal petal-5">
+        <path d="M140 180 Q110 150 130 100 Q170 90 185 135 Q170 170 140 180" fill="url(#petalGrad)"/>
+      </g>
+      <g class="petal petal-6">
+        <path d="M140 180 Q150 160 170 120 Q200 140 180 175 Q155 190 140 180" fill="url(#petalGrad)"/>
+      </g>
+      
+      <!-- Inner petals (center) -->
+      <g class="rose-glow">
+        <ellipse cx="140" cy="145" rx="35" ry="30" fill="url(#roseGrad)"/>
+        <ellipse cx="130" cy="140" rx="20" ry="18" fill="#6b0f1a"/>
+        <ellipse cx="148" cy="148" rx="15" ry="12" fill="#4a080d"/>
+      </g>
+    </svg>
   </div>
   
-  <div class="hint">点击绽放</div>
+  <div class="hint">tap to bloom</div>
   <div class="date">2019.3.3 — 2026.3.3</div>
   <div class="years">SEVEN YEARS</div>
 
@@ -259,12 +207,12 @@
 
     // Create particles
     const particlesContainer = document.getElementById('particles');
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 15; i++) {
       const particle = document.createElement('div');
       particle.className = 'particle';
       particle.style.left = Math.random() * 100 + '%';
-      particle.style.animationDelay = Math.random() * 15 + 's';
-      particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+      particle.style.animationDelay = Math.random() * 18 + 's';
+      particle.style.animationDuration = (15 + Math.random() * 12) + 's';
       particlesContainer.appendChild(particle);
     }
   </script>
