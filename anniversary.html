@@ -20,201 +20,303 @@
       background: #0a0a0a;
       background: radial-gradient(ellipse at center, #1a1012 0%, #0a0a0a 70%);
       overflow: hidden;
-      font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+      font-family: 'Times New Roman', serif;
     }
 
-    .rose-wrapper {
+    #canvas-container {
       position: relative;
-      width: 280px;
-      height: 320px;
-      cursor: pointer;
-      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .rose-wrapper:hover {
-      transform: scale(1.08);
-    }
-
-    .rose-wrapper.bloom {
-      transform: scale(1.1);
-    }
-
-    .rose-svg {
       width: 100%;
-      height: 100%;
+      height: 70vh;
+      cursor: grab;
     }
 
-    .petal {
-      transform-origin: 140px 180px;
-      transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-    }
-
-    .rose-wrapper.bloom .petal {
-      transform: scale(1.15);
-    }
-
-    .rose-wrapper.bloom .petal-1 { transform: rotate(-25deg) scale(1.2); }
-    .rose-wrapper.bloom .petal-2 { transform: rotate(-10deg) scale(1.2); }
-    .rose-wrapper.bloom .petal-3 { transform: rotate(5deg) scale(1.2); }
-    .rose-wrapper.bloom .petal-4 { transform: rotate(20deg) scale(1.2); }
-    .rose-wrapper.bloom .petal-5 { transform: rotate(-35deg) scale(1.2); }
-    .rose-wrapper.bloom .petal-6 { transform: rotate(30deg) scale(1.2); }
-
-    .rose-wrapper.bloom .rose-glow {
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-
-    @keyframes glow {
-      from { filter: drop-shadow(0 0 15px rgba(180, 30, 60, 0.4)); }
-      to { filter: drop-shadow(0 0 35px rgba(180, 30, 60, 0.7)); }
+    #canvas-container:active {
+      cursor: grabbing;
     }
 
     .hint {
       position: absolute;
-      bottom: 100px;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       color: #3a3a3a;
       font-size: 11px;
       letter-spacing: 3px;
       text-transform: uppercase;
       opacity: 0;
       transition: opacity 0.8s ease;
+      pointer-events: none;
       font-family: 'Courier New', monospace;
     }
 
-    .rose-wrapper:hover .hint,
-    .rose-wrapper.bloom .hint {
+    #canvas-container:hover .hint {
       opacity: 1;
     }
 
     .date {
       position: absolute;
-      bottom: 50px;
-      font-size: 18px;
+      bottom: 18%;
+      font-size: 16px;
       font-weight: 300;
       color: #6a5a4a;
-      letter-spacing: 6px;
-      font-family: 'Times New Roman', serif;
+      letter-spacing: 5px;
     }
 
     .years {
       position: absolute;
-      bottom: 25px;
-      font-size: 11px;
+      bottom: 12%;
+      font-size: 10px;
       color: #4a4a4a;
-      letter-spacing: 4px;
-      font-family: 'Times New Roman', serif;
+      letter-spacing: 3px;
     }
 
-    .particles {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .particle {
+    .instructions {
       position: absolute;
-      width: 3px;
-      height: 3px;
-      background: rgba(160, 40, 70, 0.4);
-      border-radius: 50%;
-      animation: float 18s infinite;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(100vh) rotate(0deg);
-        opacity: 0;
-      }
-      10% { opacity: 0.6; }
-      90% { opacity: 0.6; }
-      100% {
-        transform: translateY(-100px) rotate(720deg);
-        opacity: 0;
-      }
+      bottom: 6%;
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 2px;
     }
   </style>
 </head>
 <body>
-  <div class="particles" id="particles"></div>
-  
-  <div class="rose-wrapper" id="rose">
-    <svg class="rose-svg" viewBox="0 0 280 320">
-      <defs>
-        <radialGradient id="roseGrad" cx="50%" cy="30%" r="70%">
-          <stop offset="0%" style="stop-color:#c41e3a"/>
-          <stop offset="50%" style="stop-color:#8b0a1a"/>
-          <stop offset="100%" style="stop-color:#4a050f"/>
-        </radialGradient>
-        <radialGradient id="petalGrad" cx="50%" cy="30%" r="80%">
-          <stop offset="0%" style="stop-color:#a01830"/>
-          <stop offset="100%" style="stop-color:#5c0a1a"/>
-        </radialGradient>
-      </defs>
-      
-      <!-- Stem -->
-      <path d="M138 180 Q140 240 138 300" stroke="#1d3d1d" stroke-width="4" fill="none" stroke-linecap="round"/>
-      
-      <!-- Leaves -->
-      <ellipse cx="115" cy="250" rx="20" ry="8" fill="#1d4d1d" transform="rotate(-30 115 250)"/>
-      <ellipse cx="165" cy="265" rx="20" ry="8" fill="#1d4d1d" transform="rotate(30 165 265)"/>
-      
-      <!-- Outer petals -->
-      <g class="petal petal-1">
-        <path d="M140 180 Q100 140 120 100 Q160 80 180 120 Q170 160 140 180" fill="url(#petalGrad)"/>
-      </g>
-      <g class="petal petal-2">
-        <path d="M140 180 Q90 160 100 110 Q150 90 180 130 Q170 170 140 180" fill="url(#petalGrad)"/>
-      </g>
-      <g class="petal petal-3">
-        <path d="M140 180 Q100 180 110 130 Q160 120 180 150 Q170 180 140 180" fill="url(#petalGrad)"/>
-      </g>
-      <g class="petal petal-4">
-        <path d="M140 180 Q130 170 150 120 Q190 130 180 170 Q160 185 140 180" fill="url(#petalGrad)"/>
-      </g>
-      <g class="petal petal-5">
-        <path d="M140 180 Q110 150 130 100 Q170 90 185 135 Q170 170 140 180" fill="url(#petalGrad)"/>
-      </g>
-      <g class="petal petal-6">
-        <path d="M140 180 Q150 160 170 120 Q200 140 180 175 Q155 190 140 180" fill="url(#petalGrad)"/>
-      </g>
-      
-      <!-- Inner petals (center) -->
-      <g class="rose-glow">
-        <ellipse cx="140" cy="145" rx="35" ry="30" fill="url(#roseGrad)"/>
-        <ellipse cx="130" cy="140" rx="20" ry="18" fill="#6b0f1a"/>
-        <ellipse cx="148" cy="148" rx="15" ry="12" fill="#4a080d"/>
-      </g>
-    </svg>
+  <div id="canvas-container">
+    <div class="hint">drag to rotate</div>
   </div>
-  
-  <div class="hint">tap to bloom</div>
   <div class="date">2019.3.3 — 2026.3.3</div>
   <div class="years">SEVEN YEARS</div>
+  <div class="instructions">click to bloom</div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    const rose = document.getElementById('rose');
-    let blooming = false;
+    // Scene setup
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 5;
 
-    rose.addEventListener('click', () => {
-      blooming = !blooming;
-      rose.classList.toggle('bloom', blooming);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+    scene.add(ambientLight);
+
+    const pointLight1 = new THREE.PointLight(0xc41e3a, 1.5, 100);
+    pointLight1.position.set(3, 3, 3);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0x8b0a1a, 1, 100);
+    pointLight2.position.set(-3, -2, 2);
+    scene.add(pointLight2);
+
+    // Rose group
+    const roseGroup = new THREE.Group();
+    scene.add(roseGroup);
+
+    // Materials
+    const petalMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8b0a1a,
+      side: THREE.DoubleSide,
+      roughness: 0.6,
+      metalness: 0.1,
     });
 
-    // Create particles
-    const particlesContainer = document.getElementById('particles');
-    for (let i = 0; i < 15; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      particle.style.left = Math.random() * 100 + '%';
-      particle.style.animationDelay = Math.random() * 18 + 's';
-      particle.style.animationDuration = (15 + Math.random() * 12) + 's';
-      particlesContainer.appendChild(particle);
+    const stemMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1d4d1d,
+      roughness: 0.8,
+    });
+
+    // Create rose petals using parametric approach
+    function createPetal(size, isInner = false) {
+      const shape = new THREE.Shape();
+      const s = size;
+      
+      shape.moveTo(0, 0);
+      shape.bezierCurveTo(s * 0.3, s * 0.5, s * 0.5, s * 0.8, 0, s);
+      shape.bezierCurveTo(-s * 0.5, s * 0.8, -s * 0.3, s * 0.5, 0, 0);
+
+      const geometry = new THREE.ShapeGeometry(shape);
+      return new THREE.Mesh(geometry, petalMaterial);
     }
+
+    // Build rose
+    const petals = [];
+    
+    // Inner petals (center)
+    for (let i = 0; i < 8; i++) {
+      const petal = createPetal(0.3, true);
+      petal.position.y = 0.8;
+      petal.rotation.x = -Math.PI / 4 + Math.random() * 0.2;
+      petal.rotation.z = (i / 8) * Math.PI * 2;
+      petal.userData.originalRotationX = petal.rotation.x;
+      petals.push(petal);
+      roseGroup.add(petal);
+    }
+
+    // Middle petals
+    for (let i = 0; i < 10; i++) {
+      const petal = createPetal(0.45);
+      petal.position.y = 0.7;
+      petal.rotation.x = -Math.PI / 3 + Math.random() * 0.15;
+      petal.rotation.z = (i / 10) * Math.PI * 2;
+      petal.userData.originalRotationX = petal.rotation.x;
+      petals.push(petal);
+      roseGroup.add(petal);
+    }
+
+    // Outer petals
+    for (let i = 0; i < 12; i++) {
+      const petal = createPetal(0.55);
+      petal.position.y = 0.5;
+      petal.rotation.x = -Math.PI / 2.5;
+      petal.rotation.z = (i / 12) * Math.PI * 2;
+      petal.userData.originalRotationX = petal.rotation.x;
+      petals.push(petal);
+      roseGroup.add(petal);
+    }
+
+    // Stem
+    const stemGeometry = new THREE.CylinderGeometry(0.04, 0.06, 2.5, 8);
+    const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+    stem.position.y = -0.8;
+    roseGroup.add(stem);
+
+    // Leaves
+    const leafShape = new THREE.Shape();
+    leafShape.moveTo(0, 0);
+    leafShape.bezierCurveTo(0.3, 0.1, 0.4, 0.3, 0, 0.5);
+    leafShape.bezierCurveTo(-0.4, 0.3, -0.3, 0.1, 0, 0);
+
+    const leafGeometry = new THREE.ShapeGeometry(leafShape);
+    const leafMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x1d4d1d, 
+      side: THREE.DoubleSide,
+      roughness: 0.8
+    });
+
+    const leaf1 = new THREE.Mesh(leafGeometry, leafMaterial);
+    leaf1.position.set(0.1, -0.3, 0);
+    leaf1.rotation.z = Math.PI / 6;
+    leaf1.rotation.x = -Math.PI / 6;
+    roseGroup.add(leaf1);
+
+    const leaf2 = new THREE.Mesh(leafGeometry, leafMaterial);
+    leaf2.position.set(-0.1, -0.5, 0);
+    leaf2.rotation.z = -Math.PI / 5;
+    leaf2.rotation.x = Math.PI / 8;
+    leaf2.scale.set(0.8, 0.8, 0.8);
+    roseGroup.add(leaf2);
+
+    // Position rose
+    roseGroup.position.y = 0.3;
+    roseGroup.rotation.x = 0.3;
+
+    // Interaction
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let autoRotate = true;
+    let blooming = false;
+
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      autoRotate = false;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    container.addEventListener('mouseup', () => {
+      isDragging = false;
+      setTimeout(() => { autoRotate = true; }, 3000);
+    });
+
+    container.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaMove = {
+          x: e.clientX - previousMousePosition.x,
+          y: e.clientY - previousMousePosition.y
+        };
+
+        roseGroup.rotation.y += deltaMove.x * 0.01;
+        roseGroup.rotation.x += deltaMove.y * 0.01;
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    });
+
+    // Touch support
+    container.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      autoRotate = false;
+      previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    });
+
+    container.addEventListener('touchend', () => {
+      isDragging = false;
+      setTimeout(() => { autoRotate = true; }, 3000);
+    });
+
+    container.addEventListener('touchmove', (e) => {
+      if (isDragging) {
+        const deltaMove = {
+          x: e.touches[0].clientX - previousMousePosition.x,
+          y: e.touches[0].clientY - previousMousePosition.y
+        };
+
+        roseGroup.rotation.y += deltaMove.x * 0.01;
+        roseGroup.rotation.x += deltaMove.y * 0.01;
+
+        previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    });
+
+    // Click to bloom
+    container.addEventListener('click', (e) => {
+      if (Math.abs(e.clientX - previousMousePosition.x) < 5 && Math.abs(e.clientY - previousMousePosition.y) < 5) {
+        blooming = !blooming;
+      }
+    });
+
+    // Bloom animation
+    function animateBloom() {
+      petals.forEach((petal, i) => {
+        const targetX = blooming 
+          ? petal.userData.originalRotationX - 0.4 
+          : petal.userData.originalRotationX;
+        
+        petal.rotation.x += (targetX - petal.rotation.x) * 0.05;
+      });
+
+      // Glow effect
+      if (blooming) {
+        pointLight1.intensity = 1.5 + Math.sin(Date.now() * 0.003) * 0.5;
+      } else {
+        pointLight1.intensity = 1.5;
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (autoRotate && !isDragging) {
+        roseGroup.rotation.y += 0.005;
+      }
+
+      animateBloom();
+
+      renderer.render(scene, camera);
+    }
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    animate();
   </script>
 </body>
 </html>
