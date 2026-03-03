@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>to 我的小龟</title>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #fff5f5 0%, #fff0f5 30%, #f5f0ff 70%, #f0f5ff 100%);
+      font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Section base */
+    .section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+    }
+
+    /* Floating stars */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .star {
+      position: absolute;
+      animation: float-star 8s infinite ease-in-out;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes float-star {
+      0%, 100% { transform: translateY(100vh) rotate(0deg) scale(0); opacity: 0; }
+      10% { opacity: 1; transform: translateY(90vh) rotate(36deg) scale(1); }
+      90% { opacity: 1; transform: translateY(-10vh) rotate(324deg) scale(1); }
+      100% { transform: translateY(-20vh) rotate(360deg) scale(0); opacity: 0; }
+    }
+
+    /* Cats */
+    .cats {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .cat {
+      position: absolute;
+      animation: cat-bob 3s infinite ease-in-out;
+    }
+
+    .cat-left { top: 10%; left: 8%; }
+    .cat-right { top: 12%; right: 10%; }
+
+    @keyframes cat-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .cat svg { width: 70px; height: 60px; }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: opacity 1s ease;
+    }
+
+    .loading.hidden { opacity: 0; pointer-events: none; }
+
+    .loading-heart {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: loading-bounce 0.6s infinite alternate;
+      box-shadow: 0 0 20px rgba(255, 150, 170, 0.5);
+    }
+
+    .loading-heart::before {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 16px;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      border-radius: 50% 50% 0 0;
+    }
+
+    @keyframes loading-bounce {
+      0% { transform: scale(1) translateY(0); }
+      100% { transform: scale(1.1) translateY(-10px); }
+    }
+
+    .loading-text {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #b8a9c9;
+      letter-spacing: 2px;
+    }
+
+    /* Hero section */
+    .hero {
+      text-align: center;
+    }
+
+    /* Heart */
+    .heart-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 10px 0 30px;
+    }
+
+    .heart {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 70px;
+      animation: heart-beat 1.2s infinite ease-in-out;
+    }
+
+    .heart::before, .heart::after {
+      content: '';
+      position: absolute;
+      width: 40px;
+      height: 60px;
+      background: linear-gradient(135deg, #ffb6c1 0%, #ff9a9e 50%, #ff6b8a 100%);
+      border-radius: 40px 40px 0 0;
+      box-shadow: 0 0 15px rgba(255, 150, 170, 0.4);
+    }
+
+    .heart::before { left: 40px; transform: rotate(-45deg); transform-origin: 0 100%; }
+    .heart::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+
+    @keyframes heart-beat {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      15% { transform: translate(-50%, -50%) scale(1.15); }
+      30% { transform: translate(-50%, -50%) scale(1); }
+      45% { transform: translate(-50%, -50%) scale(1.1); }
+      60% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .float-heart {
+      position: absolute;
+      font-size: 16px;
+      animation: float-up 4s infinite ease-out;
+      opacity: 0;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(0) scale(0); opacity: 0; }
+      20% { opacity: 0.8; }
+      100% { transform: translateY(-120px) scale(1); opacity: 0; }
+    }
+
+    .title {
+      font-size: 24px;
+      color: #ff6b8a;
+      text-shadow: 2px 2px 0 #fff;
+      letter-spacing: 3px;
+    }
+
+    .date {
+      font-size: 16px;
+      color: #9b8aa0;
+      letter-spacing: 2px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 16px;
+      border-radius: 15px;
+      margin-top: 10px;
+    }
+
+    .years {
+      font-size: 10px;
+      color: #c8b8d0;
+      letter-spacing: 3px;
+      margin-top: 8px;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 30px;
+      font-size: 12px;
+      color: #c8b8d0;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Text sections */
+    .text-section {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 1s ease;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .text-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .text-section p {
+      font-size: 16px;
+      line-height: 2.2;
+      color: #8b7b8b;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .text-section .quote {
+      font-size: 28px;
+      color: #ffb6c1;
+      margin-bottom: 10px;
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ddd;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: #ff6b8a;
+      transform: scale(1.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- Stars -->
+  <div class="stars" id="stars"></div>
+
+  <!-- Cats -->
+  <div class="cats">
+    <div class="cat cat-left">
+      <svg viewBox="0 0 80 70">
+        <ellipse cx="40" cy="50" rx="25" ry="18" fill="#ff9f43"/>
+        <circle cx="40" cy="28" r="18" fill="#ff9f43"/>
+        <polygon points="26,18 32,8 38,18" fill="#ff9f43"/>
+        <polygon points="42,18 48,8 54,18" fill="#ff9f43"/>
+        <polygon points="28,18 32,10 36,18" fill="#ffe0b2"/>
+        <polygon points="44,18 48,10 52,18" fill="#ffe0b2"/>
+        <circle cx="34" cy="26" r="2.5" fill="#2d2d2d"/>
+        <circle cx="46" cy="26" r="2.5" fill="#2d2d2d"/>
+        <circle cx="35" cy="25" r="0.8" fill="#fff"/>
+        <circle cx="47" cy="25" r="0.8" fill="#fff"/>
+        <ellipse cx="40" cy="32" rx="3" ry="2" fill="#ff6b6b"/>
+        <ellipse cx="30" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.5"/>
+        <ellipse cx="50" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.5"/>
+        <line x1="25" y1="32" x2="15" y2="30" stroke="#e67e22" stroke-width="1"/>
+        <line x1="25" y1="34" x2="15" y2="35" stroke="#e67e22" stroke-width="1"/>
+        <line x1="55" y1="32" x2="65" y2="30" stroke="#e67e22" stroke-width="1"/>
+        <line x1="55" y1="34" x2="65" y2="35" stroke="#e67e22" stroke-width="1"/>
+        <path d="M60 55 Q75 50 70 35" stroke="#ff9f43" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="cat cat-right">
+      <svg viewBox="0 0 80 70">
+        <ellipse cx="40" cy="50" rx="25" ry="18" fill="#ffffff"/>
+        <circle cx="40" cy="28" r="18" fill="#ffffff"/>
+        <polygon points="26,18 32,8 38,18" fill="#ffffff"/>
+        <polygon points="42,18 48,8 54,18" fill="#ffffff"/>
+        <polygon points="28,18 32,10 36,18" fill="#f8f8f8"/>
+        <polygon points="44,18 48,10 52,18" fill="#f8f8f8"/>
+        <circle cx="34" cy="26" r="2.5" fill="#2d2d2d"/>
+        <circle cx="46" cy="26" r="2.5" fill="#2d2d2d"/>
+        <circle cx="35" cy="25" r="0.8" fill="#fff"/>
+        <circle cx="47" cy="25" r="0.8" fill="#fff"/>
+        <ellipse cx="40" cy="32" rx="3" ry="2" fill="#ffb6c1"/>
+        <ellipse cx="30" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.4"/>
+        <ellipse cx="50" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.4"/>
+        <line x1="25" y1="32" x2="15" y2="30" stroke="#ddd" stroke-width="1"/>
+        <line x1="25" y1="34" x2="15" y2="35" stroke="#ddd" stroke-width="1"/>
+        <line x1="55" y1="32" x2="65" y2="30" stroke="#ddd" stroke-width="1"/>
+        <line x1="55" y1="34" x2="65" y2="35" stroke="#ddd" stroke-width="1"/>
+        <path d="M20 55 Q5 50 10 35" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-heart"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator">
+    <div class="dot active" data-section="0"></div>
+    <div class="dot" data-section="1"></div>
+    <div class="dot" data-section="2"></div>
+    <div class="dot" data-section="3"></div>
+  </div>
+
+  <!-- Section 1: Hero -->
+  <div class="section hero" id="section-0">
+    <div class="heart-container">
+      <div class="heart"></div>
+      <span class="float-heart" style="left: 5%; animation-delay: 0s;">💕</span>
+      <span class="float-heart" style="left: 35%; animation-delay: 1.3s;">💗</span>
+      <span class="float-heart" style="left: 65%; animation-delay: 2.6s;">💖</span>
+    </div>
+    <div class="title">我的小龟，七周年快乐</div>
+    <div class="date">2019.3.3 — 2026.3.3</div>
+    <div class="years">SEVEN YEARS</div>
+    <div class="scroll-hint">↓ 向下滚动</div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="section text-section" id="section-1">
+    <div class="quote">💕</div>
+    <p>七载光阴，不负良辰。</p>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="section text-section" id="section-2">
+    <div class="quote">🏔️</div>
+    <p>我们走过斑驳的红墙黛瓦，记录过山河远阔，也在烟火日常里，拥有了两只猫的温柔。</p>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="section text-section" id="section-3">
+    <div class="quote">🐱</div>
+    <p>所谓岁月静好，不过是：看过世间古迹，身边始终是你，脚边永远有猫。</p>
+  </div>
+
+  <script>
+    // Create stars
+    const starsContainer = document.getElementById('stars');
+    const starEmojis = ['★', '✨', '💫'];
+    const starColors = ['#ffd700', '#ffb6c1', '#ff9a9e'];
+    
+    for (let i = 0; i < 12; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = (5 + i * 8 + Math.random() * 4) + '%';
+      star.style.top = '-30px';
+      star.style.animationDelay = (i * 0.7 + Math.random() * 2) + 's';
+      star.style.animationDuration = (8 + Math.random() * 4) + 's';
+      const idx = Math.floor(Math.random() * starEmojis.length);
+      star.innerHTML = starEmojis[idx];
+      star.style.color = starColors[idx];
+      star.style.fontSize = (14 + Math.random() * 8) + 'px';
+      starsContainer.appendChild(star);
+    }
+
+    // Scroll reveal
+    const sections = document.querySelectorAll('.text-section');
+    const dots = document.querySelectorAll('.dot');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.5 });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Update dots on scroll
+    window.addEventListener('scroll', () => {
+      const scrollPos = window.scrollY + window.innerHeight / 2;
+      
+      document.querySelectorAll('.section').forEach((section, index) => {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        
+        if (scrollPos >= top && scrollPos < top + height) {
+          dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+          });
+        }
+      });
+    });
+
+    // Loading complete
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+    }, 3000);
+  </script>
+</body>
+</html>
