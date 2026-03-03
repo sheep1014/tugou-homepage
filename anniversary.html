@@ -17,17 +17,16 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #080808;
-      background: radial-gradient(ellipse at 50% 35%, #151010 0%, #080808 50%, #030303 100%);
+      background: #0a0a0f;
+      background: radial-gradient(ellipse at 50% 40%, #151520 0%, #0a0a0f 60%, #050508 100%);
       overflow: hidden;
-      font-family: 'Times New Roman', serif;
+      font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
     }
 
     #canvas-container {
       position: relative;
       width: 100%;
-      height: 72vh;
-      cursor: pointer;
+      height: 75vh;
     }
 
     .hint {
@@ -35,14 +34,13 @@
       top: 52%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #2a2a2a;
-      font-size: 9px;
+      color: #3a3a4a;
+      font-size: 11px;
       letter-spacing: 4px;
       text-transform: uppercase;
       opacity: 0;
       transition: opacity 1s ease;
       pointer-events: none;
-      font-family: 'Courier New', monospace;
     }
 
     #canvas-container:hover .hint {
@@ -51,37 +49,45 @@
 
     .title {
       position: absolute;
-      bottom: 32%;
-      font-size: 13px;
-      font-weight: 300;
-      color: #4a3a3a;
-      letter-spacing: 8px;
-      text-transform: uppercase;
+      bottom: 28%;
+      font-size: 18px;
+      font-weight: 400;
+      color: #e85080;
+      letter-spacing: 6px;
+      text-shadow: 0 0 20px rgba(232, 80, 128, 0.5);
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+
+    .title.show {
+      opacity: 1;
     }
 
     .date {
       position: absolute;
-      bottom: 24%;
-      font-size: 13px;
+      bottom: 20%;
+      font-size: 14px;
       font-weight: 300;
-      color: #5a4a3a;
+      color: #6a5a6a;
       letter-spacing: 5px;
     }
 
     .years {
       position: absolute;
-      bottom: 18%;
-      font-size: 9px;
-      color: #3a3a3a;
+      bottom: 14%;
+      font-size: 10px;
+      color: #4a4a5a;
       letter-spacing: 4px;
     }
+
+    @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
   </style>
 </head>
 <body>
   <div id="canvas-container">
-    <div class="hint">tap to feel</div>
+    <div class="hint">waiting...</div>
   </div>
-  <div class="title">七周年快乐</div>
+  <div class="title">我的小龟，七周年快乐</div>
   <div class="date">2019.3.3 — 2026.3.3</div>
   <div class="years">SEVEN YEARS</div>
 
@@ -90,8 +96,8 @@
     // Scene setup
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.01, 1000);
-    camera.position.z = 3.2;
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.z = 8;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -99,286 +105,246 @@
     container.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0x151010, 1.2);
+    const ambientLight = new THREE.AmbientLight(0x202030, 1.5);
     scene.add(ambientLight);
 
-    const spotLight = new THREE.SpotLight(0xff3040, 4, 20, Math.PI / 4, 0.5);
-    spotLight.position.set(0, 3, 4);
+    const spotLight = new THREE.SpotLight(0xff3080, 3, 25, Math.PI / 4, 0.5);
+    spotLight.position.set(0, 5, 8);
     spotLight.target.position.set(0, 0, 0);
     scene.add(spotLight);
     scene.add(spotLight.target);
 
-    const fillLight = new THREE.PointLight(0x400810, 2, 12);
-    fillLight.position.set(-3, -1, 2);
+    const fillLight = new THREE.PointLight(0x603080, 1.5, 15);
+    fillLight.position.set(-4, -2, 3);
     scene.add(fillLight);
 
-    const rimLight = new THREE.PointLight(0xff1020, 1.5, 10);
-    rimLight.position.set(2, -2, -1);
-    scene.add(rimLight);
+    // Tetris blocks
+    let blocks = [];
+    let targetPositions = [];
+    let animationPhase = 'falling'; // falling, forming, complete
+    let startTime = Date.now();
 
-    // Heart particle system
-    let heartParticles;
-    let particleData = [];
-    let feeling = false;
-    let feelTarget = 0;
-    let feelCurrent = 0;
+    // Tetris shapes (标准的7种俄罗斯方块)
+    const tetrisShapes = [
+      // I
+      [[1,1,1,1]],
+      // O
+      [[1,1],[1,1]],
+      // T
+      [[0,1,0],[1,1,1]],
+      // S
+      [[0,1,1],[1,1,0]],
+      // Z
+      [[1,1,0],[0,1,1]],
+      // J
+      [[1,0,0],[1,1,1]],
+      // L
+      [[0,0,1],[1,1,1]]
+    ];
 
-    // Generate 3D heart shape
-    function generateHeart() {
-      const points = [];
+    // Heart shape grid (20x20)
+    const heartGrid = [
+      "00000000000000000000",
+      "00000000000000000000",
+      "00000000000000000000",
+      "00000011100000000000",
+      "00001111110000000000",
+      "00011111111000000000",
+      "00111111111100000000",
+      "00111111111100000000",
+      "01111111111110000000",
+      "01111111111110000000",
+      "11111111111111000000",
+      "11111111111111000000",
+      "11111111111111000000",
+      "01111111111110000000",
+      "01111111111110000000",
+      "00111111111100000000",
+      "00111111111100000000",
+      "00011111111000000000",
+      "00001111110000000000",
+      "00000111100000000000",
+    ];
+
+    // Generate blocks
+    function createBlocks() {
+      const blockSize = 0.35;
+      const gap = 0.02;
+      const totalSize = blockSize + gap;
       
-      // 3D heart using parametric surface
-      // Multiple layers in Z for true 3D depth
-      
-      // Front layers (closer to camera)
-      for (let layer = 0; layer < 8; layer++) {
-        const zOffset = -0.12 + layer * 0.035;
-        const density = layer < 2 ? 1200 : (layer < 5 ? 800 : 500);
+      // Create target positions from heart grid
+      targetPositions = [];
+      const gridWidth = 20;
+      const gridHeight = 20;
+      const offsetX = -gridWidth * totalSize / 2;
+      const offsetY = gridHeight * totalSize / 2 - 2;
+
+      for (let y = 0; y < gridHeight; y++) {
+        for (let x = 0; x < gridWidth; x++) {
+          if (heartGrid[y][x] === '1') {
+            targetPositions.push({
+              x: offsetX + x * totalSize,
+              y: offsetY - y * totalSize,
+              z: 0
+            });
+          }
+        }
+      }
+
+      // Create falling blocks
+      const numBlocks = targetPositions.length;
+      const colors = [
+        0x00ffff, // I - 青色
+        0xffff00, // O - 黄色
+        0xff00ff, // T - 紫色
+        0x00ff00, // S - 绿色
+        0xff0000, // Z - 红色
+        0x0000ff, // J - 蓝色
+        0xff8800  // L - 橙色
+      ];
+
+      for (let i = 0; i < numBlocks; i++) {
+        // Random tetris shape
+        const shapeIdx = Math.floor(Math.random() * tetrisShapes.length);
+        const shape = tetrisShapes[shapeIdx];
+        const color = colors[shapeIdx];
+
+        // Create block group
+        const blockGroup = new THREE.Group();
         
-        for (let i = 0; i < density; i++) {
-          const t = Math.random() * Math.PI * 2;
-          const u = Math.random();
-          
-          // Heart curve
-          let x = 16 * Math.pow(Math.sin(t), 3);
-          let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-          
-          // Scale - front layers slightly larger for depth effect
-          const layerScale = 1 - Math.abs(zOffset) * 0.3;
-          const scale = (0.035 + u * 0.025) * layerScale;
-          
-          // Add depth variation
-          const depthVar = (Math.random() - 0.5) * 0.02;
-          
-          // Surface noise
-          const noiseX = (Math.random() - 0.5) * 0.015;
-          const noiseY = (Math.random() - 0.5) * 0.015;
-          const noiseZ = (Math.random() - 0.5) * 0.01;
-          
-          points.push({
-            x: x * scale + noiseX,
-            y: y * scale + noiseY,
-            z: zOffset + depthVar + noiseZ,
-            ox: x * scale + noiseX,
-            oy: y * scale + noiseY,
-            oz: zOffset + depthVar + noiseZ,
-            layer: layer < 3 ? 'front' : (layer < 6 ? 'mid' : 'back'),
-            size: 0.01 + Math.random() * 0.01
+        // Create cubes for this shape
+        shape.forEach((row, ry) => {
+          row.forEach((cell, rx) => {
+            if (cell) {
+              const geometry = new THREE.BoxGeometry(blockSize * 0.95, blockSize * 0.95, blockSize * 0.95);
+              
+              // Slightly different shade for each cube
+              const shade = 0.85 + Math.random() * 0.15;
+              const material = new THREE.MeshStandardMaterial({
+                color: color * shade,
+                roughness: 0.3,
+                metalness: 0.1,
+                emissive: color,
+                emissiveIntensity: 0.1
+              });
+              
+              const cube = new THREE.Mesh(geometry, material);
+              cube.position.set(
+                (rx - shape[0].length / 2 + 0.5) * totalSize,
+                -(ry - shape.length / 2 + 0.5) * totalSize,
+                0
+              );
+              blockGroup.add(cube);
+            }
           });
-        }
-      }
-
-      // Inner core (extra bright center)
-      for (let i = 0; i < 600; i++) {
-        const t = Math.random() * Math.PI * 2;
-        const r = Math.random() * 0.15;
-        
-        let x = 16 * Math.pow(Math.sin(t), 3) * r;
-        let y = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * r;
-        const z = (Math.random() - 0.5) * 0.06;
-        
-        points.push({
-          x: x + (Math.random() - 0.5) * 0.015,
-          y: y + (Math.random() - 0.5) * 0.015,
-          z: z,
-          ox: x,
-          oy: y,
-          oz: z,
-          layer: 'core',
-          size: 0.008 + Math.random() * 0.008
         });
-      }
 
-      // Floating particles around heart
-      for (let i = 0; i < 200; i++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI;
-        const r = 0.6 + Math.random() * 0.4;
+        // Random starting position (above the screen)
+        const startX = (Math.random() - 0.5) * 12;
+        const startY = 6 + Math.random() * 4;
+        const startZ = (Math.random() - 0.5) * 2;
+
+        blockGroup.position.set(startX, startY, startZ);
         
-        points.push({
-          x: r * Math.sin(phi) * Math.cos(theta),
-          y: r * Math.sin(phi) * Math.sin(theta) * 0.8 - 0.1,
-          z: r * Math.cos(phi),
-          ox: 0, oy: 0, oz: 0,
-          layer: 'float',
-          size: 0.005 + Math.random() * 0.008,
-          floatPhase: Math.random() * Math.PI * 2,
-          floatR: r
-        });
-      }
+        // Random rotation speed
+        blockGroup.userData = {
+          rotationSpeed: {
+            x: (Math.random() - 0.5) * 0.02,
+            y: (Math.random() - 0.5) * 0.02,
+            z: (Math.random() - 0.5) * 0.02
+          },
+          targetPos: targetPositions[i],
+          delay: i * 15, // Stagger the animations
+          speed: 0.03 + Math.random() * 0.02,
+          arrived: false,
+          originalDelay: i * 15
+        };
 
-      return points;
-    }
-
-    // Create particle system
-    function createHeart() {
-      particleData = generateHeart();
-      
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleData.length * 3);
-      const colors = new Float32Array(particleData.length * 3);
-      const sizes = new Float32Array(particleData.length);
-
-      particleData.forEach((p, i) => {
-        positions[i * 3] = p.x;
-        positions[i * 3 + 1] = p.y;
-        positions[i * 3 + 2] = p.z;
-
-        // Rich red color palette - 3D depth
-        if (p.layer === 'front') {
-          // Front - brightest red
-          const brightness = 0.75 + Math.random() * 0.25;
-          colors[i * 3] = brightness;
-          colors[i * 3 + 1] = 0.1 + Math.random() * 0.15;
-          colors[i * 3 + 2] = 0.15 + Math.random() * 0.12;
-        } else if (p.layer === 'mid') {
-          // Middle - standard red
-          const brightness = 0.6 + Math.random() * 0.3;
-          colors[i * 3] = brightness;
-          colors[i * 3 + 1] = 0.08 + Math.random() * 0.1;
-          colors[i * 3 + 2] = 0.1 + Math.random() * 0.1;
-        } else if (p.layer === 'back') {
-          // Back - deeper red
-          const brightness = 0.45 + Math.random() * 0.25;
-          colors[i * 3] = brightness;
-          colors[i * 3 + 1] = 0.05 + Math.random() * 0.08;
-          colors[i * 3 + 2] = 0.08 + Math.random() * 0.08;
-        } else if (p.layer === 'core') {
-          // Core - bright center glow
-          const brightness = 0.85 + Math.random() * 0.15;
-          colors[i * 3] = brightness;
-          colors[i * 3 + 1] = 0.15 + Math.random() * 0.15;
-          colors[i * 3 + 2] = 0.2 + Math.random() * 0.1;
-        } else {
-          // Floating - subtle pink
-          colors[i * 3] = 0.6 + Math.random() * 0.2;
-          colors[i * 3 + 1] = 0.1;
-          colors[i * 3 + 2] = 0.15 + Math.random() * 0.1;
-        }
-
-        sizes[i] = p.size;
-      });
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-
-      const material = new THREE.PointsMaterial({
-        size: 0.018,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.92,
-        sizeAttenuation: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
-      heartParticles = new THREE.Points(geometry, material);
-      heartParticles.position.y = 0.25;
-      scene.add(heartParticles);
-    }
-
-    createHeart();
-
-    // Interaction
-    let rotation = { x: 0, y: 0 };
-    let targetRotation = { x: 0, y: 0 };
-    let isDragging = false;
-    let lastPos = { x: 0, y: 0 };
-    let autoRotate = true;
-    let autoTimer;
-
-    function onStart(x, y) {
-      isDragging = true;
-      autoRotate = false;
-      clearTimeout(autoTimer);
-      lastPos = { x, y };
-    }
-
-    function onMove(x, y) {
-      if (isDragging) {
-        targetRotation.y += (x - lastPos.x) * 0.006;
-        targetRotation.x += (y - lastPos.y) * 0.004;
-        targetRotation.x = Math.max(-0.6, Math.min(0.6, targetRotation.x));
-        lastPos = { x, y };
+        blocks.push(blockGroup);
+        scene.add(blockGroup);
       }
     }
 
-    function onEnd() {
-      isDragging = false;
-      autoTimer = setTimeout(() => { autoRotate = true; }, 4000);
-    }
-
-    container.addEventListener('mousedown', e => onStart(e.clientX, e.clientY));
-    container.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-    container.addEventListener('mouseup', onEnd);
-    container.addEventListener('mouseleave', onEnd);
-
-    container.addEventListener('touchstart', e => onStart(e.touches[0].clientX, e.touches[0].clientY));
-    container.addEventListener('touchmove', e => onMove(e.touches[0].clientX, e.touches[0].clientY));
-    container.addEventListener('touchend', onEnd);
-
-    // Click detection
-    let clickPos = { x: 0, y: 0 };
-    container.addEventListener('mousedown', e => clickPos = { x: e.clientX, y: e.clientY });
-    container.addEventListener('click', e => {
-      const dist = Math.hypot(e.clientX - clickPos.x, e.clientY - clickPos.y);
-      if (dist < 5) {
-        feeling = !feeling;
-        feelTarget = feeling ? 1 : 0;
-      }
-    });
+    createBlocks();
 
     // Animation
     const clock = new THREE.Clock();
-    
+    let formComplete = false;
+
     function animate() {
       requestAnimationFrame(animate);
-      const time = clock.getElapsedTime();
+      const time = clock.getElapsedTime() * 1000;
+      const elapsed = Date.now() - startTime;
 
-      // Auto rotation
-      if (autoRotate) targetRotation.y += 0.003;
-
-      // Smooth rotation
-      rotation.x += (targetRotation.x - rotation.x) * 0.06;
-      rotation.y += (targetRotation.y - rotation.y) * 0.06;
-      heartParticles.rotation.x = rotation.x;
-      heartParticles.rotation.y = rotation.y;
-
-      // Feel animation
-      feelCurrent += (feelTarget - feelCurrent) * 0.03;
-
-      const positions = heartParticles.geometry.attributes.position.array;
-      
-      particleData.forEach((p, i) => {
-        if (p.layer === 'float') {
-          // Floating particles animation
-          const float = Math.sin(time * 1.5 + p.floatPhase) * 0.03;
-          const breathe = Math.sin(time * 0.8) * 0.01;
-          positions[i * 3] = p.x + float * (1 + feelCurrent);
-          positions[i * 3 + 1] = p.y + float * 0.5 + breathe;
-          positions[i * 3 + 2] = p.z + float;
-        } else if (feelCurrent > 0.001) {
-          // Heart beats and expands
-          const beat = Math.sin(time * 3) * feelCurrent * 0.015;
-          const expand = feelCurrent * 0.12;
+      // Phase 1: Falling and forming
+      if (!formComplete) {
+        let allArrived = true;
+        
+        blocks.forEach((block, i) => {
+          const data = block.userData;
           
-          positions[i * 3] = p.ox * (1 + expand) + beat * Math.cos(i);
-          positions[i * 3 + 1] = p.oy * (1 + expand) + beat * Math.sin(i);
-          positions[i * 3 + 2] = p.oz * (1 + expand) + beat;
-        } else {
-          positions[i * 3] = p.ox;
-          positions[i * 3 + 1] = p.oy;
-          positions[i * 3 + 2] = p.oz;
+          if (elapsed < data.delay) {
+            allArrived = false;
+            return;
+          }
+
+          const target = data.targetPos;
+          
+          if (!data.arrived) {
+            // Move towards target
+            const dx = target.x - block.position.x;
+            const dy = target.y - block.position.y;
+            const dz = target.z - block.position.z;
+            
+            block.position.x += dx * data.speed;
+            block.position.y += dy * data.speed;
+            block.position.z += dz * data.speed;
+
+            // Gradually stop rotation as it approaches
+            block.rotation.x *= 0.95;
+            block.rotation.y *= 0.95;
+            block.rotation.z *= 0.95;
+
+            // Check if arrived
+            if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01 && Math.abs(dz) < 0.01) {
+              data.arrived = true;
+              block.position.set(target.x, target.y, target.z);
+            } else {
+              allArrived = false;
+            }
+          } else {
+            // Gentle idle animation
+            block.rotation.x = Math.sin(time * 0.001 + i) * 0.02;
+            block.rotation.y = Math.cos(time * 0.0015 + i) * 0.02;
+          }
+        });
+
+        if (allArrived && elapsed > blocks.length * 15 + 2000) {
+          formComplete = true;
+          animationPhase = 'complete';
+          document.querySelector('.title').classList.add('show');
+          
+          // Change all blocks to pink/red
+          blocks.forEach(block => {
+            block.children.forEach(cube => {
+              cube.material.color.setHex(0xff3080);
+              cube.material.emissive.setHex(0xff2060);
+              cube.material.emissiveIntensity = 0.3;
+            });
+          });
         }
-      });
+      } else {
+        // Complete - heart beats
+        const beat = Math.sin(time * 0.003) * 0.015 + 1;
+        
+        blocks.forEach((block, i) => {
+          block.scale.setScalar(beat);
+          block.rotation.y = Math.sin(time * 0.001 + i * 0.1) * 0.05;
+        });
 
-      heartParticles.geometry.attributes.position.needsUpdate = true;
-
-      // Pulsing glow
-      const pulse = Math.sin(time * 2.5) * 0.4 + 0.6;
-      spotLight.intensity = 4 + feelCurrent * pulse * 3;
-      fillLight.intensity = 2 + feelCurrent * 2;
+        // Pulsing light
+        spotLight.intensity = 3 + Math.sin(time * 0.003) * 1;
+      }
 
       renderer.render(scene, camera);
     }
