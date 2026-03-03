@@ -49,18 +49,28 @@
       opacity: 1;
     }
 
+    .title {
+      position: absolute;
+      bottom: 32%;
+      font-size: 13px;
+      font-weight: 300;
+      color: #4a3a3a;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+    }
+
     .date {
       position: absolute;
-      bottom: 16%;
-      font-size: 14px;
+      bottom: 24%;
+      font-size: 13px;
       font-weight: 300;
       color: #5a4a3a;
-      letter-spacing: 6px;
+      letter-spacing: 5px;
     }
 
     .years {
       position: absolute;
-      bottom: 10%;
+      bottom: 18%;
       font-size: 9px;
       color: #3a3a3a;
       letter-spacing: 4px;
@@ -71,6 +81,7 @@
   <div id="canvas-container">
     <div class="hint">tap to feel</div>
   </div>
+  <div class="title">七周年快乐</div>
   <div class="date">2019.3.3 — 2026.3.3</div>
   <div class="years">SEVEN YEARS</div>
 
@@ -247,7 +258,7 @@
       });
 
       heartParticles = new THREE.Points(geometry, material);
-      heartParticles.position.y = -0.1;
+      heartParticles.position.y = 0.25;
       scene.add(heartParticles);
     }
 
