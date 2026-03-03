@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>七周年</title>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -17,346 +18,398 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #0a0a0f;
-      background: radial-gradient(ellipse at 50% 40%, #151520 0%, #0a0a0f 60%, #050508 100%);
+      background: linear-gradient(180deg, #fff5f5 0%, #fff0f5 30%, #f5f0ff 70%, #f0f5ff 100%);
       overflow: hidden;
       font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
     }
 
-    #canvas-container {
-      position: relative;
+    /* Floating stars */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: 75vh;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
     }
 
-    .hint {
+    .star {
       position: absolute;
-      top: 52%;
+      width: 12px;
+      height: 12px;
+      animation: float-star 8s infinite ease-in-out;
+    }
+
+    .star::before {
+      content: '★';
+      font-size: 16px;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    @keyframes float-star {
+      0%, 100% {
+        transform: translateY(100vh) rotate(0deg) scale(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+        transform: translateY(90vh) rotate(36deg) scale(1);
+      }
+      90% {
+        opacity: 1;
+        transform: translateY(-10vh) rotate(324deg) scale(1);
+      }
+      100% {
+        transform: translateY(-20vh) rotate(360deg) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Cats */
+    .cats {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .cat {
+      position: absolute;
+      width: 80px;
+      height: 70px;
+      animation: cat-bob 3s infinite ease-in-out;
+    }
+
+    .cat-left {
+      top: 15%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .cat-right {
+      top: 18%;
+      right: 12%;
+      animation-delay: 1.5s;
+    }
+
+    @keyframes cat-bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .cat svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Loading */
+    .loading {
+      position: absolute;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #3a3a4a;
-      font-size: 11px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      opacity: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       transition: opacity 1s ease;
+    }
+
+    .loading.hidden {
+      opacity: 0;
       pointer-events: none;
     }
 
-    #canvas-container:hover .hint {
-      opacity: 1;
+    .loading-heart {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: loading-bounce 0.6s infinite alternate;
+      box-shadow: 0 0 20px rgba(255, 150, 170, 0.5);
     }
 
-    .title {
+    .loading-heart::before {
+      content: '';
       position: absolute;
-      bottom: 28%;
-      font-size: 18px;
-      font-weight: 400;
-      color: #e85080;
-      letter-spacing: 6px;
-      text-shadow: 0 0 20px rgba(232, 80, 128, 0.5);
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 25px;
+      height: 20px;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      border-radius: 50% 50% 0 0;
+    }
+
+    @keyframes loading-bounce {
+      0% { transform: scale(1) translateY(0); }
+      100% { transform: scale(1.1) translateY(-10px); }
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #b8a9c9;
+      letter-spacing: 2px;
+    }
+
+    /* Main content */
+    .content {
+      position: relative;
+      z-index: 50;
+      text-align: center;
       opacity: 0;
       transition: opacity 1.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
     }
 
-    .title.show {
+    .content.show {
       opacity: 1;
     }
 
-    .date {
-      position: absolute;
-      bottom: 20%;
-      font-size: 14px;
-      font-weight: 300;
-      color: #6a5a6a;
-      letter-spacing: 5px;
+    /* Heart animation */
+    .heart-container {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 20px 0;
     }
 
-    .years {
+    .heart {
       position: absolute;
-      bottom: 14%;
-      font-size: 10px;
-      color: #4a4a5a;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 90px;
+      animation: heart-beat 1.2s infinite ease-in-out;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 52px;
+      height: 80px;
+      background: linear-gradient(135deg, #ffb6c1 0%, #ff9a9e 50%, #ff6b8a 100%);
+      border-radius: 50px 50px 0 0;
+      box-shadow: 0 0 20px rgba(255, 150, 170, 0.4);
+    }
+
+    .heart::before {
+      left: 50px;
+      transform: rotate(-45deg);
+      transform-origin: 0 100%;
+    }
+
+    .heart::after {
+      left: 0;
+      transform: rotate(45deg);
+      transform-origin: 100% 100%;
+    }
+
+    @keyframes heart-beat {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      15% { transform: translate(-50%, -50%) scale(1.15); }
+      30% { transform: translate(-50%, -50%) scale(1); }
+      45% { transform: translate(-50%, -50%) scale(1.1); }
+      60% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* Floating hearts */
+    .float-heart {
+      position: absolute;
+      font-size: 20px;
+      animation: float-up 4s infinite ease-out;
+      opacity: 0;
+    }
+
+    @keyframes float-up {
+      0% {
+        transform: translateY(0) scale(0);
+        opacity: 0;
+      }
+      20% {
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(-150px) scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* Title */
+    .title {
+      font-size: 28px;
+      color: #ff6b8a;
+      text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;
+      letter-spacing: 4px;
+      margin-top: 10px;
+    }
+
+    /* Date */
+    .date {
+      font-size: 18px;
+      color: #9b8aa0;
+      letter-spacing: 3px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 8px 20px;
+      border-radius: 20px;
+    }
+
+    /* Years */
+    .years {
+      font-size: 12px;
+      color: #c8b8d0;
       letter-spacing: 4px;
     }
 
-    @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+    /* Decorative elements */
+    .deco {
+      position: absolute;
+      font-size: 24px;
+      animation: deco-float 3s infinite ease-in-out;
+    }
+
+    .deco-1 { top: 25%; left: 20%; animation-delay: 0s; }
+    .deco-2 { top: 30%; right: 18%; animation-delay: 1s; }
+    .deco-3 { bottom: 25%; left: 15%; animation-delay: 0.5s; }
+    .deco-4 { bottom: 30%; right: 20%; animation-delay: 1.5s; }
+
+    @keyframes deco-float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(10deg); }
+    }
   </style>
 </head>
 <body>
-  <div id="canvas-container">
-    <div class="hint">waiting...</div>
+  <!-- Stars -->
+  <div class="stars" id="stars"></div>
+
+  <!-- Cats -->
+  <div class="cats">
+    <!-- Left Cat -->
+    <div class="cat cat-left">
+      <svg viewBox="0 0 80 70">
+        <!-- Body -->
+        <ellipse cx="40" cy="50" rx="25" ry="18" fill="#f5e6d3"/>
+        <!-- Head -->
+        <circle cx="40" cy="28" r="18" fill="#f5e6d3"/>
+        <!-- Ears -->
+        <polygon points="26,18 32,8 38,18" fill="#f5e6d3"/>
+        <polygon points="42,18 48,8 54,18" fill="#f5e6d3"/>
+        <polygon points="28,18 32,10 36,18" fill="#ffcdd2"/>
+        <polygon points="44,18 48,10 52,18" fill="#ffcdd2"/>
+        <!-- Face -->
+        <circle cx="34" cy="26" r="2.5" fill="#4a4a4a"/>
+        <circle cx="46" cy="26" r="2.5" fill="#4a4a4a"/>
+        <circle cx="35" cy="25" r="0.8" fill="#fff"/>
+        <circle cx="47" cy="25" r="0.8" fill="#fff"/>
+        <ellipse cx="40" cy="32" rx="3" ry="2" fill="#ffab91"/>
+        <!-- Blush -->
+        <ellipse cx="30" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.6"/>
+        <ellipse cx="50" cy="30" rx="4" ry="2" fill="#ffcdd2" opacity="0.6"/>
+        <!-- Whiskers -->
+        <line x1="25" y1="32" x2="15" y2="30" stroke="#d4c4b0" stroke-width="1"/>
+        <line x1="25" y1="34" x2="15" y2="35" stroke="#d4c4b0" stroke-width="1"/>
+        <line x1="55" y1="32" x2="65" y2="30" stroke="#d4c4b0" stroke-width="1"/>
+        <line x1="55" y1="34" x2="65" y2="35" stroke="#d4c4b0" stroke-width="1"/>
+        <!-- Tail -->
+        <path d="M60 55 Q75 50 70 35" stroke="#f5e6d3" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Right Cat -->
+    <div class="cat cat-right">
+      <svg viewBox="0 0 80 70">
+        <!-- Body -->
+        <ellipse cx="40" cy="50" rx="25" ry="18" fill="#e8e0f0"/>
+        <!-- Head -->
+        <circle cx="40" cy="28" r="18" fill="#e8e0f0"/>
+        <!-- Ears -->
+        <polygon points="26,18 32,8 38,18" fill="#e8e0f0"/>
+        <polygon points="42,18 48,8 54,18" fill="#e8e0f0"/>
+        <polygon points="28,18 32,10 36,18" fill="#d1c4e9"/>
+        <polygon points="44,18 48,10 52,18" fill="#d1c4e9"/>
+        <!-- Face -->
+        <circle cx="34" cy="26" r="2.5" fill="#4a4a4a"/>
+        <circle cx="46" cy="26" r="2.5" fill="#4a4a4a"/>
+        <circle cx="35" cy="25" r="0.8" fill="#fff"/>
+        <circle cx="47" cy="25" r="0.8" fill="#fff"/>
+        <ellipse cx="40" cy="32" rx="3" ry="2" fill="#ce93d8"/>
+        <!-- Blush -->
+        <ellipse cx="30" cy="30" rx="4" ry="2" fill="#d1c4e9" opacity="0.6"/>
+        <ellipse cx="50" cy="30" rx="4" ry="2" fill="#d1c4e9" opacity="0.6"/>
+        <!-- Whiskers -->
+        <line x1="25" y1="32" x2="15" y2="30" stroke="#c4b8d4" stroke-width="1"/>
+        <line x1="25" y1="34" x2="15" y2="35" stroke="#c4b8d4" stroke-width="1"/>
+        <line x1="55" y1="32" x2="65" y2="30" stroke="#c4b8d4" stroke-width="1"/>
+        <line x1="55" y1="34" x2="65" y2="35" stroke="#c4b8d4" stroke-width="1"/>
+        <!-- Tail -->
+        <path d="M20 55 Q5 50 10 35" stroke="#e8e0f0" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
   </div>
-  <div class="title">我的小龟，七周年快乐</div>
-  <div class="date">2019.3.3 — 2026.3.3</div>
-  <div class="years">SEVEN YEARS</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-heart"></div>
+    <div class="loading-text">Loading...</div>
+  </div>
+
+  <!-- Main content -->
+  <div class="content" id="content">
+    <div class="heart-container">
+      <div class="heart"></div>
+      <span class="float-heart" style="left: 10%; animation-delay: 0s;">💕</span>
+      <span class="float-heart" style="left: 30%; animation-delay: 1s;">💗</span>
+      <span class="float-heart" style="left: 60%; animation-delay: 2s;">💖</span>
+      <span class="float-heart" style="left: 80%; animation-delay: 3s;">💘</span>
+    </div>
+    
+    <div class="title">我的小龟，七周年快乐</div>
+    <div class="date">2019.3.3 — 2026.3.3</div>
+    <div class="years">SEVEN YEARS</div>
+
+    <!-- Decorations -->
+    <span class="deco deco-1">🌸</span>
+    <span class="deco deco-2">✨</span>
+    <span class="deco deco-3">💫</span>
+    <span class="deco deco-4">🌷</span>
+  </div>
+
   <script>
-    // Scene setup
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 8;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x202030, 1.5);
-    scene.add(ambientLight);
-
-    const spotLight = new THREE.SpotLight(0xff3080, 3, 25, Math.PI / 4, 0.5);
-    spotLight.position.set(0, 5, 8);
-    spotLight.target.position.set(0, 0, 0);
-    scene.add(spotLight);
-    scene.add(spotLight.target);
-
-    const fillLight = new THREE.PointLight(0x603080, 1.5, 15);
-    fillLight.position.set(-4, -2, 3);
-    scene.add(fillLight);
-
-    // Tetris blocks
-    let blocks = [];
-    let targetPositions = [];
-    let animationPhase = 'falling'; // falling, forming, complete
-    let startTime = Date.now();
-
-    // Tetris shapes (标准的7种俄罗斯方块)
-    const tetrisShapes = [
-      // I
-      [[1,1,1,1]],
-      // O
-      [[1,1],[1,1]],
-      // T
-      [[0,1,0],[1,1,1]],
-      // S
-      [[0,1,1],[1,1,0]],
-      // Z
-      [[1,1,0],[0,1,1]],
-      // J
-      [[1,0,0],[1,1,1]],
-      // L
-      [[0,0,1],[1,1,1]]
-    ];
-
-    // Heart shape grid (20x20)
-    const heartGrid = [
-      "00000000000000000000",
-      "00000000000000000000",
-      "00000000000000000000",
-      "00000011100000000000",
-      "00001111110000000000",
-      "00011111111000000000",
-      "00111111111100000000",
-      "00111111111100000000",
-      "01111111111110000000",
-      "01111111111110000000",
-      "11111111111111000000",
-      "11111111111111000000",
-      "11111111111111000000",
-      "01111111111110000000",
-      "01111111111110000000",
-      "00111111111100000000",
-      "00111111111100000000",
-      "00011111111000000000",
-      "00001111110000000000",
-      "00000111100000000000",
-    ];
-
-    // Generate blocks
-    function createBlocks() {
-      const blockSize = 0.35;
-      const gap = 0.02;
-      const totalSize = blockSize + gap;
+    // Create stars
+    const starsContainer = document.getElementById('stars');
+    const starEmojis = ['★', '☆', '✦', '✧'];
+    const starColors = ['#ffd700', '#ffb6c1', '#ff9a9e', '#fff'];
+    
+    for (let i = 0; i < 20; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.animationDelay = Math.random() * 8 + 's';
+      star.style.animationDuration = (6 + Math.random() * 4) + 's';
       
-      // Create target positions from heart grid
-      targetPositions = [];
-      const gridWidth = 20;
-      const gridHeight = 20;
-      const offsetX = -gridWidth * totalSize / 2;
-      const offsetY = gridHeight * totalSize / 2 - 2;
-
-      for (let y = 0; y < gridHeight; y++) {
-        for (let x = 0; x < gridWidth; x++) {
-          if (heartGrid[y][x] === '1') {
-            targetPositions.push({
-              x: offsetX + x * totalSize,
-              y: offsetY - y * totalSize,
-              z: 0
-            });
-          }
-        }
-      }
-
-      // Create falling blocks
-      const numBlocks = targetPositions.length;
-      const colors = [
-        0x00ffff, // I - 青色
-        0xffff00, // O - 黄色
-        0xff00ff, // T - 紫色
-        0x00ff00, // S - 绿色
-        0xff0000, // Z - 红色
-        0x0000ff, // J - 蓝色
-        0xff8800  // L - 橙色
-      ];
-
-      for (let i = 0; i < numBlocks; i++) {
-        // Random tetris shape
-        const shapeIdx = Math.floor(Math.random() * tetrisShapes.length);
-        const shape = tetrisShapes[shapeIdx];
-        const color = colors[shapeIdx];
-
-        // Create block group
-        const blockGroup = new THREE.Group();
-        
-        // Create cubes for this shape
-        shape.forEach((row, ry) => {
-          row.forEach((cell, rx) => {
-            if (cell) {
-              const geometry = new THREE.BoxGeometry(blockSize * 0.95, blockSize * 0.95, blockSize * 0.95);
-              
-              // Slightly different shade for each cube
-              const shade = 0.85 + Math.random() * 0.15;
-              const material = new THREE.MeshStandardMaterial({
-                color: color * shade,
-                roughness: 0.3,
-                metalness: 0.1,
-                emissive: color,
-                emissiveIntensity: 0.1
-              });
-              
-              const cube = new THREE.Mesh(geometry, material);
-              cube.position.set(
-                (rx - shape[0].length / 2 + 0.5) * totalSize,
-                -(ry - shape.length / 2 + 0.5) * totalSize,
-                0
-              );
-              blockGroup.add(cube);
-            }
-          });
-        });
-
-        // Random starting position (above the screen)
-        const startX = (Math.random() - 0.5) * 12;
-        const startY = 6 + Math.random() * 4;
-        const startZ = (Math.random() - 0.5) * 2;
-
-        blockGroup.position.set(startX, startY, startZ);
-        
-        // Random rotation speed
-        blockGroup.userData = {
-          rotationSpeed: {
-            x: (Math.random() - 0.5) * 0.02,
-            y: (Math.random() - 0.5) * 0.02,
-            z: (Math.random() - 0.5) * 0.02
-          },
-          targetPos: targetPositions[i],
-          delay: i * 15, // Stagger the animations
-          speed: 0.03 + Math.random() * 0.02,
-          arrived: false,
-          originalDelay: i * 15
-        };
-
-        blocks.push(blockGroup);
-        scene.add(blockGroup);
-      }
+      // Random star emoji and color
+      const idx = Math.floor(Math.random() * starEmojis.length);
+      star.style.setProperty('--star-emoji', starEmojis[idx]);
+      star.style.color = starColors[idx];
+      
+      starsContainer.appendChild(star);
     }
 
-    createBlocks();
-
-    // Animation
-    const clock = new THREE.Clock();
-    let formComplete = false;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const time = clock.getElapsedTime() * 1000;
-      const elapsed = Date.now() - startTime;
-
-      // Phase 1: Falling and forming
-      if (!formComplete) {
-        let allArrived = true;
-        
-        blocks.forEach((block, i) => {
-          const data = block.userData;
-          
-          if (elapsed < data.delay) {
-            allArrived = false;
-            return;
-          }
-
-          const target = data.targetPos;
-          
-          if (!data.arrived) {
-            // Move towards target
-            const dx = target.x - block.position.x;
-            const dy = target.y - block.position.y;
-            const dz = target.z - block.position.z;
-            
-            block.position.x += dx * data.speed;
-            block.position.y += dy * data.speed;
-            block.position.z += dz * data.speed;
-
-            // Gradually stop rotation as it approaches
-            block.rotation.x *= 0.95;
-            block.rotation.y *= 0.95;
-            block.rotation.z *= 0.95;
-
-            // Check if arrived
-            if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01 && Math.abs(dz) < 0.01) {
-              data.arrived = true;
-              block.position.set(target.x, target.y, target.z);
-            } else {
-              allArrived = false;
-            }
-          } else {
-            // Gentle idle animation
-            block.rotation.x = Math.sin(time * 0.001 + i) * 0.02;
-            block.rotation.y = Math.cos(time * 0.0015 + i) * 0.02;
-          }
-        });
-
-        if (allArrived && elapsed > blocks.length * 15 + 2000) {
-          formComplete = true;
-          animationPhase = 'complete';
-          document.querySelector('.title').classList.add('show');
-          
-          // Change all blocks to pink/red
-          blocks.forEach(block => {
-            block.children.forEach(cube => {
-              cube.material.color.setHex(0xff3080);
-              cube.material.emissive.setHex(0xff2060);
-              cube.material.emissiveIntensity = 0.3;
-            });
-          });
-        }
-      } else {
-        // Complete - heart beats
-        const beat = Math.sin(time * 0.003) * 0.015 + 1;
-        
-        blocks.forEach((block, i) => {
-          block.scale.setScalar(beat);
-          block.rotation.y = Math.sin(time * 0.001 + i * 0.1) * 0.05;
-        });
-
-        // Pulsing light
-        spotLight.intensity = 3 + Math.sin(time * 0.003) * 1;
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    // Resize
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
-
-    animate();
+    // Loading complete
+    setTimeout(() => {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content').classList.add('show');
+    }, 3000);
   </script>
 </body>
 </html>
