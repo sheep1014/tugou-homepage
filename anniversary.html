@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>七周年</title>
+  <title>to 我的小龟</title>
   <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * {
@@ -222,16 +222,13 @@
 
     /* Love letter */
     .love-letter {
-      position: absolute;
-      bottom: 8%;
-      left: 50%;
-      transform: translateX(-50%);
       width: 80%;
       max-width: 500px;
       text-align: center;
       font-size: 15px;
       line-height: 2;
       color: #8b7b8b;
+      margin-top: 30px;
       opacity: 0;
     }
 
@@ -257,6 +254,19 @@
     @keyframes blink {
       0%, 50% { opacity: 1; }
       51%, 100% { opacity: 0; }
+    }
+
+    /* Scroll container */
+    .content {
+      position: relative;
+      z-index: 50;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 50px;
     }
   </style>
 </head>
@@ -381,6 +391,11 @@
           if (index < lines[line].length) {
             textElement.textContent += lines[line][index];
             index++;
+            // Scroll to bottom as typing
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: 'smooth'
+            });
             setTimeout(typeWriter, 80 + Math.random() * 50);
           } else {
             line++;
