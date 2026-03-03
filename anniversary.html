@@ -133,9 +133,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 20px 60px;
+      padding: 60px 20px 80px;
       width: 100%;
-      max-width: 550px;
+      max-width: 600px;
     }
 
     .content.show { opacity: 1; }
@@ -179,6 +179,7 @@
       60% { transform: translate(-50%, -50%) scale(1); }
     }
 
+    /* Floating hearts */
     .float-heart {
       position: absolute;
       font-size: 16px;
@@ -200,6 +201,7 @@
       letter-spacing: 3px;
     }
 
+    /* Date */
     .date {
       font-size: 16px;
       color: #9b8aa0;
@@ -210,6 +212,7 @@
       margin-top: 10px;
     }
 
+    /* Years */
     .years {
       font-size: 10px;
       color: #c8b8d0;
@@ -217,35 +220,39 @@
       margin-top: 8px;
     }
 
-    /* Love letter - Typewriter */
+    /* Love letter - Version 2: Fade in paragraphs */
     .love-letter {
-      width: 85%;
-      max-width: 480px;
-      text-align: left;
-      margin-top: 35px;
-      font-size: 14px;
-      line-height: 2;
-      color: #8b7b8b;
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+      margin-top: 40px;
     }
 
     .love-letter p {
-      white-space: pre-line;
-      min-height: 1em;
+      margin: 0 0 25px 0;
+      font-size: 15px;
+      line-height: 2;
+      color: #8b7b8b;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1s ease;
     }
 
-    .cursor {
-      display: inline-block;
-      width: 2px;
-      height: 16px;
-      background: #ff9a9e;
-      margin-left: 2px;
-      animation: blink 0.7s infinite;
-      vertical-align: text-bottom;
+    .love-letter p.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
+    .love-letter p::before {
+      content: '"';
+      font-size: 24px;
+      color: #ffb6c1;
+    }
+
+    .love-letter p::after {
+      content: '"';
+      font-size: 24px;
+      color: #ffb6c1;
     }
   </style>
 </head>
@@ -320,8 +327,10 @@
     <div class="date">2019.3.3 — 2026.3.3</div>
     <div class="years">SEVEN YEARS</div>
     
-    <div class="love-letter">
-      <p id="letterText"></p><span class="cursor"></span>
+    <div class="love-letter" id="loveLetter">
+      <p id="p1">七载光阴，不负良辰。</p>
+      <p id="p2">我们走过斑驳的红墙黛瓦，记录过山河远阔，也在烟火日常里，拥有了两只猫的温柔。</p>
+      <p id="p3">所谓岁月静好，不过是：看过世间古迹，身边始终是你，脚边永远有猫。</p>
     </div>
   </div>
 
@@ -345,41 +354,25 @@
       starsContainer.appendChild(star);
     }
 
-    // Loading complete - Typewriter effect
+    // Loading complete - Version 2: Fade in paragraphs
     setTimeout(() => {
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('content').classList.add('show');
       
-      const text = `七载光阴，不负良辰。
-
-我们走过斑驳的红墙黛瓦，记录过山河远阔，也在烟火日常里，拥有了两只猫的温柔。
-
-从2019到2026，我们的脚步丈量过太多风景：在江南的雨巷里，听青石板上的时光低语；在塞北的古城墙下，看落日把余晖铺成金箔；在深山古刹的飞檐下，等一场不期而遇的雪；在海边的礁石旁，数着浪花把心事说给晚风听。
-
-那些访古的日子，我们在斗拱与榫卯间触摸历史的温度，在碑刻与壁画前读懂岁月的厚重。而当旅途结束，推开家门，总有两只小毛球在脚边蹭来蹭去，用软乎乎的绒毛和呼噜声，把所有的疲惫都揉成了安心。
-
-所谓岁月静好，不过是：看过世间古迹，身边始终是你，脚边永远有猫。
-
-往后的日子，我们还要去更多的地方，看更多的风景，把每一段路都走成我们的故事，把每一个平凡的日子，都过成值得珍藏的时光。`;
-      
-      const textElement = document.getElementById('letterText');
-      let index = 0;
-      
-      function typeWriter() {
-        if (index < text.length) {
-          textElement.textContent += text[index];
-          index++;
-          // Scroll as we type
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-          });
-          // Random delay for natural feel
-          setTimeout(typeWriter, 50 + Math.random() * 50);
-        }
-      }
-      
-      setTimeout(typeWriter, 800);
+      // Fade in paragraphs one by one
+      const paragraphs = ['p1', 'p2', 'p3'];
+      paragraphs.forEach((id, index) => {
+        setTimeout(() => {
+          document.getElementById(id).classList.add('show');
+          // Scroll to show new content
+          setTimeout(() => {
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: 'smooth'
+            });
+          }, 300);
+        }, index * 1500);
+      });
     }, 3000);
   </script>
 </body>
